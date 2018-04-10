@@ -22,6 +22,19 @@ MERCHANTABLITY OR NON-INFRINGEMENT.
 See the Apache Version 2.0 License for specific language governing permissions
 and limitations under the License.
 ***************************************************************************** */
+/* global Reflect, Promise */
+
+
+
+
+
+
+
+
+
+
+
+
 
 function __awaiter(thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -60,6 +73,8 @@ function __generator(thisArg, body) {
     }
 }
 
+
+
 function __values(o) {
     var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
     if (m) return m.call(o);
@@ -74,6 +89,7 @@ function __values(o) {
 var path$1 = require('path');
 var rollup = require('rollup');
 var typescript = require('rollup-plugin-typescript2');
+// import typescript from 'rollup-plugin-typescript2';
 var sourcemaps = require('rollup-plugin-sourcemaps');
 var commonjs = require('rollup-plugin-commonjs');
 var minify = require('rollup-plugin-babel-minify');
@@ -81,7 +97,7 @@ var json = require('rollup-plugin-json');
 var cacheRoot = path$1.join(path$1.resolve(__filename, process.cwd()), '.cache');
 function rollerblade(paths) {
     return __awaiter(this, void 0, void 0, function () {
-        var results, paths_1, paths_1_1, input, rollupResult, finfo, mapFile, jsFile, result, e_1_1, e_1, _a;
+        var results, paths_1, paths_1_1, input, finfo, mapFile, jsFile, rollupResult, result, e_1_1, e_1, _a;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -105,17 +121,30 @@ function rollerblade(paths) {
                     if (input.sourcemap === undefined) {
                         input.sourcemap = true;
                     }
+                    // 
+                    if (input.target === undefined) {
+                        input.target = 'es5';
+                    }
+                    // 
+                    if (input.target !== undefined && input.tsconfig !== undefined) {
+                        console.warn('Both target and tsconfig specified, target will be overriden by tsconfig.');
+                    }
+                    console.log(input);
+                    finfo = path$1.parse(input.output || input.input);
+                    mapFile = path$1.join(finfo.dir, finfo.name + ".js.map");
+                    jsFile = path$1.join(finfo.dir, finfo.name + ".js");
                     return [4 /*yield*/, rollup.rollup({
-                            input: input.path,
+                            input: input.input,
                             treeshake: true,
                             plugins: [
                                 json(),
                                 typescript({
                                     cacheRoot: cacheRoot,
+                                    useTsconfigDeclarationDir: true,
                                     tsconfigDefaults: {
                                         "compilerOptions": {
                                             "moduleResolution": "node",
-                                            "target": "es5",
+                                            "target": input.target,
                                             "lib": [
                                                 "es2018",
                                                 "es2017",
@@ -124,6 +153,7 @@ function rollerblade(paths) {
                                                 "dom"
                                             ],
                                             "declaration": true,
+                                            "declarationDir": finfo.dir,
                                             "allowSyntheticDefaultImports": true,
                                             "experimentalDecorators": true,
                                             "emitDecoratorMetadata": true,
@@ -146,9 +176,6 @@ function rollerblade(paths) {
                         })];
                 case 4:
                     rollupResult = _b.sent();
-                    finfo = path$1.parse(input.path);
-                    mapFile = path$1.join(finfo.dir, finfo.name + ".js.map");
-                    jsFile = path$1.join(finfo.dir, finfo.name + ".js");
                     return [4 /*yield*/, rollupResult.generate({
                             format: input.format,
                             sourcemapFile: mapFile,
@@ -159,7 +186,8 @@ function rollerblade(paths) {
                     results.push({
                         js: {
                             file: jsFile,
-                            content: result.code + ("//# sourceMappingURL=./" + (finfo.name + ".js.map"))
+                            content: result.code
+                                + (input.sourcemap ? "//# sourceMappingURL=./" + (finfo.name + ".js.map") : '')
                         },
                         map: input.sourcemap ? {
                             file: mapFile,
@@ -204,27 +232,43 @@ var command = minimist(process.argv.slice(2), {
     boolean: ['s']
 });
 // console.log(command);
+var paths;
 // If no paths are given, assume the local path
 if (command._.length == 0) {
-    // load a config?
-    // const configFile = path.join(process.cwd(), 'rollerblade.json');
-    // console.log(configFile);
-    // Needs to specify an entry point
-    console.log("Usage: rollerblade ./myfile.ts -f cjs -s");
-    console.log("Must specify at least one ts entry file.");
+    // Load a config?
+    var pkg = require(path.join(process.cwd(), 'package.json'));
+    if (pkg && pkg.rollerblade) {
+        // Get paths
+        paths = pkg.rollerblade.map(function (e) {
+            if (typeof e === 'string') {
+                return { input: e };
+            }
+            else {
+                return e;
+            }
+        });
+    }
+    else {
+        // Needs to specify an entry point
+        console.log("Usage: rollerblade ./myfile.ts -f cjs -s");
+        console.log("Must specify at least one ts entry file or be configured in package.json.");
+        process.exit(0);
+    }
 }
 else {
     // Find absolute paths to files
-    var paths = command._
+    paths = command._
         .filter(function (fp) { return typeof fp === "string"; }) // Only keep strings ( sometimes was undefined? )
         .map(function (file) {
         var dir = path.resolve(file, process.cwd());
         return {
-            path: path.join(dir, file),
+            input: path.join(dir, file),
             sourcemap: command.sourcemap,
             format: command.format
         };
     });
+}
+if (paths) {
     // 
     rollerblade(paths)
         .then(function (results) {

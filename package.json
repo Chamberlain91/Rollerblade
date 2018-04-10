@@ -9,6 +9,14 @@
   "scripts": {
     "prepare": "rollup -c"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Chamberlain91/rollerblade.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Chamberlain91/rollerblade/issues"
+  },
+  "homepage": "https://github.com/Chamberlain91/rollerblade#readme",
   "author": "Christopher Chamberlain",
   "license": "MIT",
   "dependencies": {

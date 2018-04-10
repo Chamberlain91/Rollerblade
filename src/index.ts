@@ -1,6 +1,7 @@
 const path = require('path');
 const rollup = require('rollup');
 const typescript = require('rollup-plugin-typescript2');
+// import typescript from 'rollup-plugin-typescript2';
 const sourcemaps = require('rollup-plugin-sourcemaps');
 const commonjs = require('rollup-plugin-commonjs');
 const minify = require('rollup-plugin-babel-minify');
@@ -9,9 +10,11 @@ const json = require('rollup-plugin-json');
 import merge from 'deepmerge';
 
 export type Input = {
-    path: string
+    input: string
+    output?: string
     format?: string
     sourcemap?: boolean
+    target?: string
     tsconfig?: any
 }
 
@@ -38,17 +41,35 @@ export default async function rollerblade(paths: Input[]) {
             }
 
             // 
+            if (input.target === undefined) {
+                input.target = 'es5';
+            }
+
+            // 
+            if (input.target !== undefined && input.tsconfig !== undefined) {
+                console.warn('Both target and tsconfig specified, target will be overriden by tsconfig.');
+            }
+
+            console.log(input);
+
+            // Parse path
+            let finfo = path.parse(input.output || input.input);
+            let mapFile = path.join(finfo.dir, finfo.name + ".js.map");
+            let jsFile = path.join(finfo.dir, finfo.name + ".js");
+
+            // 
             const rollupResult = await rollup.rollup({
-                input: input.path,
+                input: input.input,
                 treeshake: true,
                 plugins: [
                     json(),
                     typescript({
                         cacheRoot: cacheRoot,
+                        useTsconfigDeclarationDir: true,
                         tsconfigDefaults: {
                             "compilerOptions": {
                                 "moduleResolution": "node",
-                                "target": "es5",
+                                "target": input.target,
                                 "lib": [
                                     "es2018",
                                     "es2017",
@@ -57,6 +78,7 @@ export default async function rollerblade(paths: Input[]) {
                                     "dom"
                                 ],
                                 "declaration": true,
+                                "declarationDir": finfo.dir,
                                 "allowSyntheticDefaultImports": true,
                                 "experimentalDecorators": true,
                                 "emitDecoratorMetadata": true,
@@ -78,11 +100,6 @@ export default async function rollerblade(paths: Input[]) {
                 ]
             });
 
-            // Parse path
-            let finfo = path.parse(input.path);
-            let mapFile = path.join(finfo.dir, finfo.name + ".js.map");
-            let jsFile = path.join(finfo.dir, finfo.name + ".js");
-
             // 
             const result = await rollupResult.generate({
                 format: input.format,
@@ -93,7 +110,8 @@ export default async function rollerblade(paths: Input[]) {
             results.push({
                 js: {
                     file: jsFile,
-                    content: result.code + `//# sourceMappingURL=./${finfo.name + ".js.map"}`
+                    content: result.code
+                        + (input.sourcemap ? `//# sourceMappingURL=./${finfo.name + ".js.map"}` : '')
                 },
                 map: input.sourcemap ? {
                     file: mapFile,
