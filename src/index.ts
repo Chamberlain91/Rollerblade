@@ -18,6 +18,17 @@ export type Input = {
     tsconfig?: any
 }
 
+export type Output = {
+    js: {
+        file: string,
+        content: string
+    },
+    map?: {
+        file: string
+        content: string
+    }
+}
+
 const cacheRoot = path.join(path.resolve(__filename, process.cwd()), '.cache');
 
 export default async function rollerblade(paths: Input[]) {
@@ -25,7 +36,7 @@ export default async function rollerblade(paths: Input[]) {
     if (paths.length == 0) throw new Error("Must specify at least one path to a file.");
     else {
 
-        let results = [];
+        let results = new Array<Output>();
 
         // For each file
         for (let input of paths) {
@@ -40,12 +51,12 @@ export default async function rollerblade(paths: Input[]) {
                 input.sourcemap = true;
             }
 
-            // 
-            if (input.target === undefined) {
+            // tsconfig is undefined and target, use default es5
+            if (input.tsconfig === undefined && input.target === undefined) {
                 input.target = 'es5';
             }
 
-            // 
+            // Both tsconfig and target is defined, warn
             if (input.target !== undefined && input.tsconfig !== undefined) {
                 console.warn('Both target and tsconfig specified, target will be overriden by tsconfig.');
             }

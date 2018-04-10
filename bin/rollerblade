@@ -104,7 +104,7 @@ function rollerblade(paths) {
                     if (!(paths.length == 0)) return [3 /*break*/, 1];
                     throw new Error("Must specify at least one path to a file.");
                 case 1:
-                    results = [];
+                    results = new Array();
                     _b.label = 2;
                 case 2:
                     _b.trys.push([2, 8, 9, 10]);
