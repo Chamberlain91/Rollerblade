@@ -1,7 +1,6 @@
 const path = require('path');
 const rollup = require('rollup');
 const typescript = require('rollup-plugin-typescript2');
-// import typescript from 'rollup-plugin-typescript2';
 const sourcemaps = require('rollup-plugin-sourcemaps');
 const commonjs = require('rollup-plugin-commonjs');
 const minify = require('rollup-plugin-babel-minify');
