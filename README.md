@@ -75,6 +75,37 @@ rollerblade([{
 * `tsconfig` A custom tsconfig to override any tsconfig.json files and provide specific typescript compilation options for specific files. Default is `undefined`.
 * `target` Which generation of javascript to target compilation and attempted downleveling. Defaults to `ES5`.
 
+## Configuration in package.json
+
+Using the Javascript configuration options for the JS API, you can specify a `rollerblade` field in your `package.json` to configure calls to the `rollerblade` CLI with zero arguments. 
+
+For example:
+
+```json
+{
+  "name": "rollerblade-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "rollerblade",
+    "prestart": "npm run build",
+    "start": "node ."
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "rollerblade": "^0.1.1"
+  },
+  "rollerblade": [
+    {
+      "input": "src/app.ts",
+      "output": "index.js",
+      "target": "es5"
+    }
+  ]
+}
+```
+
 ## Contribution
 
 If you feel like contributing to this project, please put a pull request or whatever. If it is useful to you,I wouldn't mind hearing what you're doing with it. 
