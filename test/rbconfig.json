@@ -1,5 +1,6 @@
 {
     "input": "math.ts",
     "output": "out/math.js",
+    "compress": true,
     "target": "es5"
 }

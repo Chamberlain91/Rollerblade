@@ -9,6 +9,7 @@ const command = minimist(process.argv.slice(2), {
     alias: {
         o: 'output',
         m: 'sourcemap',
+        c: ['compress', 'minify'],
         f: 'format',
         t: 'target',
         h: 'help'
@@ -16,15 +17,18 @@ const command = minimist(process.argv.slice(2), {
 
     default: {
         o: undefined,
+        m: false,
+        c: false,
         h: false,
-        s: false,
         t: 'es5',
         f: 'es',
     },
 
     // 
-    boolean: ['s', 'h']
+    boolean: ['s', 'h', 'c']
 });
+
+// console.log(command);
 
 let config: Input[] | undefined;
 
@@ -88,6 +92,7 @@ else if (command._.length == 1) {
     config = [{
         input: input, // path.join(dir, input),
         sourcemap: command.sourcemap,
+        compress: command.compress,
         format: command.format
     }];
 
@@ -140,6 +145,10 @@ function printHelp(long: boolean) {
         console.log("--output or -o");
         console.log("\tSpecifies output file path.")
         console.log("\tIf not specified, writes adjacent to input file with .js extension.");
+        console.log("");
+        console.log("--compress or -c");
+        console.log("\tEnable minification of output files.");
+        console.log("\tDisabled by default.");
         console.log("");
         console.log("--sourcemap or -m");
         console.log("\tEnable writing sourcemaps ( writes adjacent to output with .js.map extension ).");

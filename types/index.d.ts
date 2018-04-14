@@ -3,6 +3,7 @@ export declare type Input = {
     output?: string;
     format?: string;
     sourcemap?: boolean;
+    compress?: boolean;
     target?: string;
     tsconfig?: any;
 };

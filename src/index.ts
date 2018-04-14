@@ -14,6 +14,7 @@ export type Input = {
     output?: string
     format?: string
     sourcemap?: boolean
+    compress?: boolean
     target?: string
     tsconfig?: any
 }
@@ -54,6 +55,11 @@ export default async function rollerblade(inputs: Input[]) {
             // 
             if (item.sourcemap === undefined) {
                 item.sourcemap = false;
+            }
+
+            // 
+            if (item.compress === undefined) {
+                item.compress = false;
             }
 
             // No custom TS Config
@@ -114,7 +120,7 @@ export default async function rollerblade(inputs: Input[]) {
                             })
                         }),
                         commonjs(),
-                        uglify(getMinifyOptions(item.target as string)),
+                        uglify(getMinifyOptions(item.target as string, item.compress || false)),
                         sourcemaps()
                     ]
                 });
@@ -156,19 +162,19 @@ function changeExtension(src: string, ext: string) {
     return path.join(fileInfo.dir, fileInfo.name + "." + ext);
 }
 
-function getMinifyOptions(target: string) {
+function getMinifyOptions(target: string, compress: boolean) {
     let ecma = getEcmaVersion(target);
 
     // console.log("Configuring Uglify for ECMA " + ecma);
 
     return {
         output: {
-            beautify: true,
+            beautify: !compress,
             ecma: ecma,
         },
         compress: {
             ecma: ecma,
-            unsafe: true
+            // unsafe: true
         }
     }
 }
