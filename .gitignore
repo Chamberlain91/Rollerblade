@@ -1,5 +1,6 @@
 .cache/
 bin/
+test/out/
 
 # Logs
 logs

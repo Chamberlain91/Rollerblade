@@ -1,0 +1,5 @@
+{
+    "input": "math.ts",
+    "output": "out/math.js",
+    "target": "es5"
+}

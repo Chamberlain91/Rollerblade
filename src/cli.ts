@@ -42,13 +42,20 @@ if (command.help) {
 else if (command._.length == 0) {
 
     // Load package.json
-    const pkg = require(path.join(process.cwd(), 'package.json'));
+    let cfg = loadConfigFile('package.json').rollerblade;
+
+    // Load rbconfig.json
+    cfg = cfg || loadConfigFile('rbconfig.json');
 
     // If we found the package and have a rollerblade field
-    if (pkg && pkg.rollerblade) {
+    if (cfg) {
+
+        // Wrap as array if not
+        if (!Array.isArray(cfg))
+            cfg = [cfg];
 
         // Get individual configurations
-        config = pkg.rollerblade.map((e: Input | string) => {
+        config = cfg.map((e: Input | string) => {
 
             // If just a string
             if (typeof e === 'string')
@@ -60,8 +67,8 @@ else if (command._.length == 0) {
     } else {
 
         // Report failure
-        if (pkg) console.error("Unable to find `rollerblade` field in package.json.");
-        else console.error("Unable to find package.json");
+        if (cfg) console.error("Unable to find `rollerblade` field in package.json or rbconfig.json.");
+        else console.error("Unable to find package.json or rbconfig.json");
 
     }
 }
@@ -73,6 +80,9 @@ else if (command._.length == 1) {
 
     // Find directory for input file
     const dir = path.resolve(input, process.cwd());
+
+    console.log(`Using input: ${input}`);
+    console.log(`             ${dir}`);
 
     // 
     config = [{
@@ -93,7 +103,7 @@ if (config !== undefined) {
         for (let result of results) {
 
             // 
-            mkdirpath(result.js.file);
+            ensurepath(result.js.file);
 
             // Write transpiled JS code to disk
             fs.writeFileSync(result.js.file, result.js.content);
@@ -118,9 +128,9 @@ function printHelp(long: boolean) {
 
     // Prints basic usage
     console.log("Usage:\t`rollerblade [options] input`");
-    console.log("or\t`rollerblade` configured with package.json");
+    console.log("or\t`rollerblade` configured with package.json or rbconfig.json");
     console.log("");
-    console.log("Must specify entry file or be configured in package.json.");
+    console.log("Must specify entry file or be configured in package.json or rbconfig.json.");
 
     if (long) {
         // Extended help
@@ -137,7 +147,7 @@ function printHelp(long: boolean) {
         console.log("");
         console.log("--format or -f");
         console.log("\tSets the desired module format ( amd, cjs, es, iife or umd ).");
-        console.log("\tWill use `es` by default.");
+        console.log("\tWill use `iife` by default.");
         console.log("");
         console.log("--target or -t");
         console.log("\tSets the desired js version target ( es3, es5, es2015... etc ).");
@@ -158,13 +168,22 @@ function printHelp(long: boolean) {
     }
 }
 
+function loadConfigFile(file: string) {
+    const pkgPath = path.resolve(process.cwd(), file);
+    if (fs.existsSync(pkgPath)) {
+        return require(pkgPath);
+    } else {
+        return false;
+    }
+}
+
 // Shamelessy ripped from rollup
-function mkdirpath(path: string) {
+function ensurepath(path: string) {
     const dir = dirname(path);
     try {
         fs.readdirSync(dir);
     } catch (err) {
-        mkdirpath(dir);
+        ensurepath(dir);
         try {
             fs.mkdirSync(dir);
         } catch (err2) {

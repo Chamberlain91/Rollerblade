@@ -20,25 +20,35 @@ npm i rollerblade -D
 ## CLI Usage
 
 ```
-$ rollerblade [options] src1 src2 ... srcN
+$ rollerblade [options] src
+```
+
+or with a configuration file in the working directory
+
+```
+$ rollerblade 
 ```
 
 For example, compile to `src/test.js` with sourcemaps via CLI.
 
 ```bash
-$ rollerblade src/test.ts -s
+$ rollerblade src/test.ts -m
 ```
 
 ### CLI Configuration
 
-* `-s` or `--sourcemap` to enable writing sourcemaps. Sourcemaps are written next to the output file as `*.js.map`
-* `-f` or `--format` to set the rollup output format ( `es`, `cjs`, etc )
-* `-o` or `--output` to set desired output file or directory. A directory must be specified if transpiling multiple files.  
-**CURRENTLY N/A**
+* `-m` or `--sourcemap` to enable writing sourcemaps.
+* `-f` or `--format` to set the module format ( default is `iife` )
+* `-t` or `--target` to set the ECMA version ( default is `es5` )
+* `-o` or `--output` to set desired output file.
 
-## Javascript Usage
+By default, `rollerblade` will output files adjacent to input file if the `-o` option is not specified.
 
-A simple string assumes all defaults ( ES module format, sourcemaps, targeting ES5 )
+Sourcemaps are written next to the output file as `.js.map`.
+
+## Javascript API
+
+Simply specifying the path to a file will use all defaults.
 
 ```js
 import rollerblade from 'rollerblade'
@@ -55,29 +65,31 @@ import rollerblade from 'rollerblade'
 rollerblade([{
         input: 'src/test.ts',
         output: 'bin/test.js',
-        sourcemap: true,
+        sourcemap: false,
         target: 'es5',
-        format: 'es'
+        format: 'iife'
 }]).then(results => {
     // Contains the results of transpiling source
 });
 ```
 
-### Javascript Configuration
+**Note** - The `rollerblade` function accepts an array to allow the compilation of multiple entrypoints or targets. For example `client` and `server` or for cross platform builds where one may use `umd` and the other `es` modules.
+
+### JSON Configuration
 
 #### Required
 * `input` Required path to source file.
 
 #### Optional
 * `output` Required path to source file. Default is input path with `.js` extension.
-* `format` to set the rollup output format ( `es`, `cjs`, etc ). Default is `es`.
+* `format` to set the rollup output format ( `es`, `cjs`, etc ). Default is `iife`.
 * `sourcemap` Boolean flag to determine if sourcemaps should be generated. Default is `true`.
 * `tsconfig` A custom tsconfig to override any tsconfig.json files and provide specific typescript compilation options for specific files. Default is `undefined`.
 * `target` Which generation of javascript to target compilation and attempted downleveling. Defaults to `ES5`.
 
-## Configuration in package.json
+## Configuration Files
 
-Using the Javascript configuration options for the JS API, you can specify a `rollerblade` field in your `package.json` to configure calls to the `rollerblade` CLI with zero arguments. 
+Using the Javascript configuration options for the JS API or a empty CLI call, you can specify configuration in a `rbconfig.json` file or a `rollerblade` field in your `package.json`.
 
 For example:
 
@@ -94,17 +106,27 @@ For example:
   },
   "dependencies": {},
   "devDependencies": {
-    "rollerblade": "^0.1.1"
+    "rollerblade": "^0.1.7"
   },
-  "rollerblade": [
-    {
-      "input": "src/app.ts",
-      "output": "index.js",
-      "target": "es5"
-    }
-  ]
+  "rollerblade": {
+    "input": "src/app.ts",
+    "output": "index.js",
+    "target": "es5"
+  }
 }
 ```
+
+or in `rbconfig.json`
+
+```json
+{
+  "input": "src/app.ts",
+  "output": "index.js",
+  "target": "es5"
+}
+```
+
+**Note** - The `rollerblade` field or `rbconfig.json` accepts an array of these configuration objects to allow the compilation of multiple entrypoints. Examples mentioned above.
 
 ## Contribution
 

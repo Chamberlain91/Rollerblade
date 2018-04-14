@@ -16,4 +16,4 @@ export declare type Output = {
         content: string;
     };
 };
-export default function rollerblade(paths: Input[]): Promise<Output[]>;
+export default function rollerblade(inputs: Input[]): Promise<Output[]>;
