@@ -1,6 +1,9 @@
-.cache/
 bin/
 test/out/
+# Ignoring index.js because its a generated file
+index.js 
+
+.cache/
 
 # Logs
 logs
