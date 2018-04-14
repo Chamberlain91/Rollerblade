@@ -16,7 +16,10 @@ function config(src, out, fmt, banner = "") {
         },
         plugins: [
             json(),
-            typescript({ cacheRoot: ".cache" }),
+            typescript({
+                cacheRoot: ".cache",
+                useTsconfigDeclarationDir: true
+            }),
             commonjs(),
             uglify()
         ]
