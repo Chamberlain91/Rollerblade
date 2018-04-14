@@ -47,11 +47,8 @@ else if (command._.length == 0) {
     // If we found the package and have a rollerblade field
     if (pkg && pkg.rollerblade) {
 
-        // Get the conifiguration
-        let config = pkg.rollerblade;
-
         // Get individual configurations
-        config = config.map((e: Input | string) => {
+        config = pkg.rollerblade.map((e: Input | string) => {
 
             // If just a string
             if (typeof e === 'string')
@@ -59,6 +56,13 @@ else if (command._.length == 0) {
 
             return e;
         });
+
+    } else {
+
+        // Report failure
+        if (pkg) console.error("Unable to find `rollerblade` field in package.json.");
+        else console.error("Unable to find package.json");
+
     }
 }
 
