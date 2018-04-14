@@ -47,7 +47,7 @@ export default async function rollerblade(paths: Input[]) {
 
             // 
             if (input.sourcemap === undefined) {
-                input.sourcemap = true;
+                input.sourcemap = false;
             }
 
             // tsconfig is undefined and target, use default es5
@@ -93,7 +93,6 @@ export default async function rollerblade(paths: Input[]) {
                                 "experimentalDecorators": true,
                                 "emitDecoratorMetadata": true,
                                 "downlevelIteration": true,
-                                "noImplicitAny": true,
                                 "noImplicitReturns": true,
                                 "noImplicitThis": true
                             }

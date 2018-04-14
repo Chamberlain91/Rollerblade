@@ -1,80 +1,172 @@
 import rollerblade, { Input } from "./index";
 import minimist from "minimist";
-import path from "path";
+import path, { dirname } from "path";
 import fs from "fs";
-
-const rootDir = path.resolve("package.json", process.cwd());
 
 // Read command line params
 const command = minimist(process.argv.slice(2), {
+
     alias: {
-        // o: 'output',
-        s: 'sourcemap',
-        f: 'format'
+        o: 'output',
+        m: 'sourcemap',
+        f: 'format',
+        t: 'target',
+        h: 'help'
     },
+
     default: {
-        // o: undefined,
+        o: undefined,
+        h: false,
         s: false,
-        f: 'es'
+        t: 'es5',
+        f: 'es',
     },
-    boolean: ['s']
+
+    // 
+    boolean: ['s', 'h']
 });
 
-// console.log(command);
-let paths: Input[] | undefined;
+let config: Input[] | undefined;
 
-// If no paths are given, assume the local path
-if (command._.length == 0) {
+// Display long help
+if (command.help) {
 
-    // Load a config?
+    // Show long form help information
+    printHelp(true);
+
+    // Exit application
+    process.exit(0);
+}
+
+// If no paths are given, attempt to get configuration from package.json
+else if (command._.length == 0) {
+
+    // Load package.json
     const pkg = require(path.join(process.cwd(), 'package.json'));
+
+    // If we found the package and have a rollerblade field
     if (pkg && pkg.rollerblade) {
 
-        // Get paths
-        paths = pkg.rollerblade.map((e: Input | string) => {
-            if (typeof e === 'string') { return { input: e }; }
-            else { return e as Input; }
-        });
+        // Get the conifiguration
+        let config = pkg.rollerblade;
 
-    } else {
-        // Needs to specify an entry point
-        console.log("Usage: rollerblade ./myfile.ts -f cjs -s");
-        console.log("Must specify at least one ts entry file or be configured in package.json.");
-        process.exit(0);
+        // Get individual configurations
+        config = config.map((e: Input | string) => {
+
+            // If just a string
+            if (typeof e === 'string')
+                e = { input: e };
+
+            return e;
+        });
     }
+}
 
-} else {
+// Has one input path specified
+else if (command._.length == 1) {
 
-    // Find absolute paths to files
-    paths = command._
-        .filter(fp => typeof fp === "string") // Only keep strings ( sometimes was undefined? )
-        .map(file => {
-            const dir = path.resolve(file, process.cwd());
-            return {
-                input: path.join(dir, file),
-                sourcemap: command.sourcemap,
-                format: command.format
-            }
-        });
+    const input = command._[0];
+
+    // Find directory for input file
+    const dir = path.resolve(input, process.cwd());
+
+    // 
+    config = [{
+        input: input, // path.join(dir, input),
+        sourcemap: command.sourcemap,
+        format: command.format
+    }];
 
 }
 
-if (paths) {
+// If we found a configuration
+if (config !== undefined) {
 
-    // 
-    rollerblade(paths)
-        .then(results => {
+    // Call rollerblade with the configuration
+    rollerblade(config).then(results => {
 
-            // For each result
-            for (let result of results) {
+        // For each result
+        for (let result of results) {
 
-                // Write transpiled JS code to disk
-                fs.writeFileSync(result.js.file, result.js.content);
+            // 
+            mkdirpath(result.js.file);
 
-                // Write sourcemap to disk
-                if (command.sourcemap && result.map) {
-                    fs.writeFileSync(result.map.file, result.map.content);
-                }
+            // Write transpiled JS code to disk
+            fs.writeFileSync(result.js.file, result.js.content);
+
+            // Write sourcemap to disk
+            if (result.map) {
+                fs.writeFileSync(result.map.file, result.map.content);
             }
-        });
+        }
+    });
+
+} else {
+
+    // Invalid configuration ( show short form help )
+    printHelp(false);
+
+    // Exit application
+    process.exit(0);
+}
+
+function printHelp(long: boolean) {
+
+    // Prints basic usage
+    console.log("Usage:\t`rollerblade [options] input`");
+    console.log("or\t`rollerblade` configured with package.json");
+    console.log("");
+    console.log("Must specify entry file or be configured in package.json.");
+
+    if (long) {
+        // Extended help
+        console.log("");
+        console.log("Options:");
+        console.log("");
+        console.log("--output or -o");
+        console.log("\tSpecifies output file path.")
+        console.log("\tIf not specified, writes adjacent to input file with .js extension.");
+        console.log("");
+        console.log("--sourcemap or -m");
+        console.log("\tEnable writing sourcemaps ( writes adjacent to output with .js.map extension ).");
+        console.log("\tDisabled by default.");
+        console.log("");
+        console.log("--format or -f");
+        console.log("\tSets the desired module format ( amd, cjs, es, iife or umd ).");
+        console.log("\tWill use `es` by default.");
+        console.log("");
+        console.log("--target or -t");
+        console.log("\tSets the desired js version target ( es3, es5, es2015... etc ).");
+        console.log("\tA tsconfig.json file will override this settings.");
+        console.log("\tWill use `es5` by default.");
+        console.log("");
+        console.log("--help or -h");
+        console.log("\tDisplays this help text and ignores all other options.");
+    }
+
+    console.log("");
+    console.log("Example:");
+    console.log("        rollerblade ./myfile.ts -f cjs -s");
+
+    if (!long) {
+        console.log("");
+        console.log("Use option --help or -h for more information.");
+    }
+}
+
+// Shamelessy ripped from rollup
+function mkdirpath(path: string) {
+    const dir = dirname(path);
+    try {
+        fs.readdirSync(dir);
+    } catch (err) {
+        mkdirpath(dir);
+        try {
+            fs.mkdirSync(dir);
+        } catch (err2) {
+            if (err2.code !== 'EEXIST') {
+                throw err2;
+            }
+        }
+    }
 }
