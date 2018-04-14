@@ -60,7 +60,7 @@ export default async function rollerblade(paths: Input[]) {
                 console.warn('Both target and tsconfig specified, target will be overriden by tsconfig.');
             }
 
-            console.log(input);
+            console.log("Processing: " + input.input);
 
             // Parse path
             let finfo = path.parse(input.output || input.input);
