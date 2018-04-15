@@ -111,7 +111,7 @@ export default async function rollerblade(inputs: Input[]) {
                             },
                             tsconfigOverride: merge(item.tsconfig || {}, {
                                 "compilerOptions": {
-                                    "sourceMap": item.sourcemap
+                                    "sourceMap": item.sourcemap !== undefined
                                 }
                             })
                         }),
