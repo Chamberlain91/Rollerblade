@@ -1,13 +1,13 @@
 [
     {
-        "input": "math.ts",
+        "input": "src/math.ts",
         "output": "out/math.js",
         "target": "es5"
     },
     {
-        "input": "math.ts",
+        "input": "src/math.ts",
         "output": "out/math-src.js",
-        "sourcemap": true,
+        "sourcemap": "inline",
         "compress": true,
         "target": "es5"
     }

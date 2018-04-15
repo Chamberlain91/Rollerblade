@@ -13,7 +13,7 @@ export type Input = {
     input: string
     output?: string
     format?: string
-    sourcemap?: boolean
+    sourcemap?: "inline" | "external"
     compress?: boolean
     target?: string
     tsconfig?: any
@@ -27,6 +27,7 @@ export type Output = {
     map?: {
         file: string
         content: string
+        isExternal: boolean
     }
 }
 
@@ -50,11 +51,6 @@ export default async function rollerblade(inputs: Input[]) {
             // 
             if (item.format === undefined) {
                 item.format = "iife";
-            }
-
-            // 
-            if (item.sourcemap === undefined) {
-                item.sourcemap = false;
             }
 
             // 
@@ -136,15 +132,24 @@ export default async function rollerblade(inputs: Input[]) {
                     sourcemap: item.sourcemap
                 });
 
+                // 
+                let sourceMappingURL = relativeMapFile;
+                if (item.sourcemap == "inline") {
+                    let buffer = new Buffer(JSON.stringify(result.map));
+                    let base64 = buffer.toString('base64');
+                    sourceMappingURL = "data:application/json;charset=utf-8;base64," + base64;
+                }
+
                 results.push({
                     js: {
                         file: item.output,
                         content: result.code
-                            + (item.sourcemap ? `//# sourceMappingURL=${relativeMapFile}` : '')
+                            + (item.sourcemap ? `//# sourceMappingURL=${sourceMappingURL}` : '')
                     },
                     map: item.sourcemap ? {
                         file: mapFile,
-                        content: result.map
+                        content: result.map,
+                        isExternal: item.sourcemap == "external"
                     } : undefined
                 });
 

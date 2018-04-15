@@ -1,4 +1,5 @@
 rollup.config.js
 tsconfig.json
 .cache/
+test/
 src/

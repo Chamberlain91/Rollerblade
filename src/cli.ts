@@ -17,7 +17,7 @@ const command = minimist(process.argv.slice(2), {
 
     default: {
         o: undefined,
-        m: false,
+        m: undefined,
         c: false,
         h: false,
         t: 'es5',
@@ -25,7 +25,7 @@ const command = minimist(process.argv.slice(2), {
     },
 
     // 
-    boolean: ['s', 'h', 'c']
+    boolean: ['h', 'c']
 });
 
 // console.log(command);
@@ -114,7 +114,7 @@ if (config !== undefined) {
             fs.writeFileSync(result.js.file, result.js.content);
 
             // Write sourcemap to disk
-            if (result.map) {
+            if (result.map && result.map.isExternal) {
                 fs.writeFileSync(result.map.file, result.map.content);
             }
         }
@@ -151,7 +151,8 @@ function printHelp(long: boolean) {
         console.log("\tDisabled by default.");
         console.log("");
         console.log("--sourcemap or -m");
-        console.log("\tEnable writing sourcemaps ( writes adjacent to output with .js.map extension ).");
+        console.log("\tEnable writing sourcemaps, either \"inline\" or \"external\".");
+        console.log("\tExternal maps are written adjacent to output with .js.map extension.");
         console.log("\tDisabled by default.");
         console.log("");
         console.log("--format or -f");

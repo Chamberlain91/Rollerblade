@@ -32,7 +32,7 @@ $ rollerblade
 For example, compile to `src/test.js` with sourcemaps via CLI.
 
 ```bash
-$ rollerblade src/test.ts -m
+$ rollerblade src/test.ts -m "external"
 ```
 
 ### CLI Configuration
@@ -44,7 +44,7 @@ $ rollerblade src/test.ts -m
 
 By default, `rollerblade` will output files adjacent to input file if the `-o` option is not specified.
 
-Sourcemaps are written next to the output file as `.js.map`.
+External sourcemaps are written next to the output file as `.js.map`.
 
 ## Javascript API
 
@@ -65,7 +65,7 @@ import rollerblade from 'rollerblade'
 rollerblade([{
         input: 'src/test.ts',
         output: 'bin/test.js',
-        sourcemap: false,
+        sourcemap: undefined,
         target: 'es5',
         format: 'iife'
 }]).then(results => {
@@ -83,7 +83,7 @@ rollerblade([{
 #### Optional
 * `output` Required path to source file. Default is input path with `.js` extension.
 * `format` to set the rollup output format ( `es`, `cjs`, etc ). Default is `iife`.
-* `sourcemap` Boolean flag to determine if sourcemaps should be generated. Default is `true`.
+* `sourcemap` Determine if sourcemaps should be generated. Options are `"inline"`, `"external"`, or `undefined`. Default is disabled with `undefined`.
 * `tsconfig` A custom tsconfig to override any tsconfig.json files and provide specific typescript compilation options for specific files. Default is `undefined`.
 * `target` Which generation of javascript to target compilation and attempted downleveling. Defaults to `ES5`.
 

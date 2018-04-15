@@ -2,7 +2,7 @@ export declare type Input = {
     input: string;
     output?: string;
     format?: string;
-    sourcemap?: boolean;
+    sourcemap?: "inline" | "external";
     compress?: boolean;
     target?: string;
     tsconfig?: any;
@@ -15,6 +15,7 @@ export declare type Output = {
     map?: {
         file: string;
         content: string;
+        isExternal: boolean;
     };
 };
 export default function rollerblade(inputs: Input[]): Promise<Output[]>;
