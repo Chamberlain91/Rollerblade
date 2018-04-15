@@ -127,6 +127,7 @@ export default async function rollerblade(inputs: Input[]) {
 
                 // Parse path 
                 const mapFile = changeExtension(item.output, 'js.map');
+                const relativeMapFile = path.relative(path.dirname(item.output), mapFile);
 
                 // 
                 const result = await rollupResult.generate({
@@ -139,7 +140,7 @@ export default async function rollerblade(inputs: Input[]) {
                     js: {
                         file: item.output,
                         content: result.code
-                            + (item.sourcemap ? `//# sourceMappingURL=./${mapFile}` : '')
+                            + (item.sourcemap ? `//# sourceMappingURL=${relativeMapFile}` : '')
                     },
                     map: item.sourcemap ? {
                         file: mapFile,

@@ -1,6 +1,14 @@
-{
-    "input": "math.ts",
-    "output": "out/math.js",
-    "compress": true,
-    "target": "es5"
-}
+[
+    {
+        "input": "math.ts",
+        "output": "out/math.js",
+        "target": "es5"
+    },
+    {
+        "input": "math.ts",
+        "output": "out/math-src.js",
+        "sourcemap": true,
+        "compress": true,
+        "target": "es5"
+    }
+]
