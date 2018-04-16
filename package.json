@@ -1,6 +1,6 @@
 {
   "name": "rollerblade",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "A shortcut utility for compiling typescript via rollup.",
   "main": "./bin/index.js",
   "bin": {
