@@ -9,10 +9,11 @@ const scss = require('rollup-plugin-scss');
 const pug = require('rollup-plugin-pug');
 
 const commonjs = require('rollup-plugin-commonjs');
-const amd = require('rollup-plugin-amd');
 
-const nodeResolve = require('rollup-plugin-node-resolve-magic');
+// const nodeResolve = require('rollup-plugin-node-resolve-magic');
+const nodeResolve = require('rollup-plugin-node-resolve');
 const nodeBuiltins = require('rollup-plugin-node-builtins');
+const nodeGlobals = require('rollup-plugin-node-globals');
 
 const uglify = require('rollup-plugin-uglify');
 
@@ -118,10 +119,9 @@ export default async function rollerblade(inputs: Input[]) {
                         }),
 
                         nodeBuiltins(),
+                        nodeGlobals(),
 
-                        // MODULES
                         commonjs(),
-                        amd(),
 
                         // MINIFY
 
