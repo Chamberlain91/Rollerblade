@@ -10,6 +10,9 @@
             "es2015",
             "dom"
         ],
+        "noEmitHelpers": false,
+        "importHelpers": true,
+        "noResolve": false,
         "declaration": true,
         "declarationDir": "types",
         "allowSyntheticDefaultImports": true,

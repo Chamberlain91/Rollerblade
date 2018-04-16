@@ -2,10 +2,10 @@ export declare type Input = {
     input: string;
     output?: string;
     format?: string;
-    sourcemap?: "inline" | "external";
-    compress?: boolean;
     target?: string;
-    tsconfig?: any;
+    sourcemap?: "inline" | "external" | "none";
+    declaration?: boolean;
+    minify?: boolean;
 };
 export declare type Output = {
     js: {

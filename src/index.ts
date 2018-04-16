@@ -1,29 +1,48 @@
 const rollup = require('rollup');
-const typescript = require('rollup-plugin-typescript2');
-const sourcemaps = require('rollup-plugin-sourcemaps');
-const commonjs = require('rollup-plugin-commonjs');
-const uglify = require('rollup-plugin-uglify');
-const json = require('rollup-plugin-json');
 
-import merge from 'deepmerge';
-import * as path from 'path';
-import { ECANCELED } from 'constants';
+const typescript = require('rollup-typescript');
+const tsc = require('typescript');
+
+const json = require('rollup-plugin-json');
+const pegjs = require('rollup-plugin-pegjs');
+const scss = require('rollup-plugin-scss');
+const pug = require('rollup-plugin-pug');
+
+const commonjs = require('rollup-plugin-commonjs');
+const amd = require('rollup-plugin-amd');
+
+const nodeResolve = require('rollup-plugin-node-resolve-magic');
+const nodeBuiltins = require('rollup-plugin-node-builtins');
+
+const uglify = require('rollup-plugin-uglify');
+
+const sourcemaps = require('rollup-plugin-sourcemaps');
+
+import { resolve, dirname, join, parse, relative } from 'path';
+import { existsSync } from 'fs';
+import chalk from "chalk";
+
+export type Target = "es5" | "es6";
 
 export type Input = {
+
     input: string
     output?: string
+
     format?: string
-    sourcemap?: "inline" | "external"
-    compress?: boolean
-    target?: string
-    tsconfig?: any
+    target?: Target
+
+    sourcemap?: "inline" | "external" | "none"
+    minify?: boolean
 }
 
 export type Output = {
+
     js: {
-        file: string,
+        file: string
         content: string
-    },
+    }
+
     map?: {
         file: string
         content: string
@@ -31,7 +50,7 @@ export type Output = {
     }
 }
 
-const cacheRoot = path.join(path.dirname(path.resolve(process.cwd(), __filename)), '.cache');
+const cacheRoot = join(require('temp-dir'), '.rpt2_cache');
 
 export default async function rollerblade(inputs: Input[]) {
 
@@ -43,87 +62,83 @@ export default async function rollerblade(inputs: Input[]) {
         // For each file
         for (let item of inputs) {
 
-            // 
-            if (item.output === undefined) {
+            // Default Configuration
+
+            if (item.output == undefined)
                 item.output = changeExtension(item.input, "js");
-            }
 
-            // 
-            if (item.format === undefined) {
-                item.format = "iife";
-            }
+            if (item.format == undefined)
+                item.format = "cjs";
 
-            // 
-            if (item.compress === undefined) {
-                item.compress = false;
-            }
+            if (item.target == undefined)
+                item.target = "es5";
 
-            // No custom TS Config
-            if (item.tsconfig === undefined) {
-                // Target isn't known
-                if (item.target === undefined) {
-                    item.target = 'es5';
-                }
-            } else {
+            if (item.minify == undefined)
+                item.minify = false;
 
-                // Target is specified and the config, this is a clash!
-                if (item.target !== undefined) {
-                    console.warn('Both target and tsconfig specified, target will be overriden by tsconfig.');
-                }
+            if (item.sourcemap == undefined)
+                item.sourcemap = "none";
 
-                // Attempt to get the tsconfig target version
-                item.target = item.tsconfig.compilerOptions.target || "es5";
-            }
+            // Log which file we are processing
 
-            console.log("Processing: (" + item.target + ") " + item.input);
+            console.log(
+                chalk.cyanBright(`Processing: '${item.input}' as ${item.target} (${item.format})`)
+            );
 
             try {
+
+                const tsoptions = tsconfig(
+                    item.target,
+                    item.sourcemap == "none");
 
                 // 
                 const rollupResult = await rollup.rollup({
                     input: item.input,
                     treeshake: true,
                     plugins: [
-                        json(),
+
+                        // TYPESCRIPT
+
                         typescript({
-                            cacheRoot: cacheRoot,
-                            useTsconfigDeclarationDir: true,
-                            tsconfigDefaults: {
-                                "compilerOptions": {
-                                    "moduleResolution": "node",
-                                    "target": item.target,
-                                    "lib": [
-                                        "es2018",
-                                        "es2017",
-                                        "es2016",
-                                        "es2015",
-                                        "dom"
-                                    ],
-                                    "declaration": true,
-                                    "declarationDir": path.dirname(item.output),
-                                    "allowSyntheticDefaultImports": true,
-                                    "experimentalDecorators": true,
-                                    "emitDecoratorMetadata": true,
-                                    "downlevelIteration": true,
-                                    "noImplicitReturns": true,
-                                    "noImplicitThis": true
-                                }
-                            },
-                            tsconfigOverride: merge(item.tsconfig || {}, {
-                                "compilerOptions": {
-                                    "sourceMap": item.sourcemap !== undefined
-                                }
-                            })
+                            typescript: tsc,
+                            ...tsoptions.compilerOptions
                         }),
+
+                        // ASSETS
+
+                        json(),
+                        pegjs(),
+                        scss(),
+                        pug(),
+
+                        // RESOLVE
+
+                        nodeResolve({
+                            browser: false
+                        }),
+
+                        nodeBuiltins(),
+
+                        // MODULES
                         commonjs(),
-                        uglify(getMinifyOptions(item.target as string, item.compress || false)),
+                        amd(),
+
+                        // MINIFY
+
+                        uglify({
+                            output: {
+                                beautify: !item.minify
+                            }
+                        }),
+
+                        // 
                         sourcemaps()
                     ]
                 });
 
                 // Parse path 
                 const mapFile = changeExtension(item.output, 'js.map');
-                const relativeMapFile = path.relative(path.dirname(item.output), mapFile);
+                const relativeMapFile = relative(dirname(item.output), mapFile);
 
                 // 
                 const result = await rollupResult.generate({
@@ -131,7 +146,6 @@ export default async function rollerblade(inputs: Input[]) {
                     sourcemapFile: mapFile,
                     sourcemap: item.sourcemap
                 });
-
                 // 
                 let sourceMappingURL = relativeMapFile;
                 if (item.sourcemap == "inline") {
@@ -154,8 +168,8 @@ export default async function rollerblade(inputs: Input[]) {
                 });
 
             } catch (e) {
-                console.error(`Unable to find '${item.input}'.`);
-                console.error(e);
+                console.error(chalk.red(`Error processing '${item.input}'.`));
+                console.error(chalk.red(e));
             }
         }
 
@@ -164,50 +178,31 @@ export default async function rollerblade(inputs: Input[]) {
 }
 
 function changeExtension(src: string, ext: string) {
-    let fileInfo = path.parse(src);
-    return path.join(fileInfo.dir, fileInfo.name + "." + ext);
+    let fileInfo = parse(src);
+    return join(fileInfo.dir, fileInfo.name + "." + ext);
 }
 
-function getMinifyOptions(target: string, compress: boolean) {
-    let ecma = getEcmaVersion(target);
-
-    // console.log("Configuring Uglify for ECMA " + ecma);
+function tsconfig(target: Target, sourcemap: boolean) {
 
     return {
-        output: {
-            beautify: !compress,
-            ecma: ecma,
-        },
-        compress: {
-            ecma: ecma,
-            // unsafe: true
+        "compilerOptions": {
+            "moduleResolution": "node",
+            "target": target,
+            "lib": [
+                "es2018",
+                "es2017",
+                "es2016",
+                "es2015",
+                "dom"
+            ],
+            "allowSyntheticDefaultImports": true,
+            "experimentalDecorators": true,
+            "emitDecoratorMetadata": true,
+            "downlevelIteration": true,
+            // "noImplicitReturns": true,
+            // "noImplicitThis": true,
+            // "noImplicitAny": true,
+            "sourceMap": sourcemap
         }
-    }
-}
-
-function getEcmaVersion(target: string) {
-    target = target.toLowerCase();
-
-    switch (target) {
-
-        case "es6":
-        case "es2015":
-            return 6;
-
-        case "es7":
-        case "es2016":
-            return 7;
-
-        case "es8":
-        case "es2017":
-            return 8;
-
-        case "es9":
-        case "es2018":
-        case "esnext":
-            return 9;
-
-        default:
-            return 5;
-    }
+    };
 }

@@ -1,7 +1,7 @@
-import typescript from 'rollup-plugin-typescript2';
+import typescript from 'rollup-typescript';
 import commonjs from 'rollup-plugin-commonjs';
 import uglify from 'rollup-plugin-uglify';
-import json from 'rollup-plugin-json';
+import tsc from 'typescript';
 
 import { join } from 'path';
 
@@ -15,11 +15,7 @@ function config(src, out, fmt, banner = "") {
             format: fmt
         },
         plugins: [
-            json(),
-            typescript({
-                cacheRoot: ".cache",
-                useTsconfigDeclarationDir: true
-            }),
+            typescript({ typescript: tsc }),
             commonjs(),
             uglify()
         ]

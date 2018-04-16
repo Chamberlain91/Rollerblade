@@ -8,8 +8,8 @@ const command = minimist(process.argv.slice(2), {
 
     alias: {
         o: 'output',
-        m: 'sourcemap',
-        c: ['compress', 'minify'],
+        s: 'sourcemap',
+        m: 'minify',
         f: 'format',
         t: 'target',
         h: 'help'
@@ -17,18 +17,16 @@ const command = minimist(process.argv.slice(2), {
 
     default: {
         o: undefined,
-        m: undefined,
-        c: false,
+        s: undefined,
+        m: false,
         h: false,
         t: 'es5',
-        f: 'es',
+        f: 'cjs',
     },
 
     // 
-    boolean: ['h', 'c']
+    boolean: ['m', 'h']
 });
-
-// console.log(command);
 
 let config: Input[] | undefined;
 
@@ -42,14 +40,11 @@ if (command.help) {
     process.exit(0);
 }
 
-// If no paths are given, attempt to get configuration from package.json
+// If no paths are given, attempt to get configuration from rollerblade.config.json
 else if (command._.length == 0) {
 
-    // Load package.json
-    let cfg = loadConfigFile('package.json').rollerblade;
-
-    // Load rbconfig.json
-    cfg = cfg || loadConfigFile('rbconfig.json');
+    // Load rollerblade.config.json
+    let cfg = loadConfigFile('rollerblade.config.json');
 
     // If we found the package and have a rollerblade field
     if (cfg) {
@@ -71,8 +66,7 @@ else if (command._.length == 0) {
     } else {
 
         // Report failure
-        if (cfg) console.error("Unable to find `rollerblade` field in package.json or rbconfig.json.");
-        else console.error("Unable to find package.json or rbconfig.json");
+        console.error("Unable to find rollerblade.config.json");
 
     }
 }
@@ -90,32 +84,33 @@ else if (command._.length == 1) {
 
     // 
     config = [{
-        input: input, // path.join(dir, input),
+        input: input,
+        output: command.output,
+        target: command.target,
+        format: command.format,
         sourcemap: command.sourcemap,
-        compress: command.compress,
-        format: command.format
+        minify: command.minify,
     }];
-
 }
 
 // If we found a configuration
 if (config !== undefined) {
 
     // Call rollerblade with the configuration
-    rollerblade(config).then(results => {
+    rollerblade(config).then(outputs => {
 
         // For each result
-        for (let result of results) {
+        for (let output of outputs) {
 
             // 
-            ensurepath(result.js.file);
+            ensurepath(output.js.file);
 
             // Write transpiled JS code to disk
-            fs.writeFileSync(result.js.file, result.js.content);
+            fs.writeFileSync(output.js.file, output.js.content);
 
             // Write sourcemap to disk
-            if (result.map && result.map.isExternal) {
-                fs.writeFileSync(result.map.file, result.map.content);
+            if (output.map && output.map.isExternal) {
+                fs.writeFileSync(output.map.file, output.map.content);
             }
         }
     });
@@ -133,9 +128,9 @@ function printHelp(long: boolean) {
 
     // Prints basic usage
     console.log("Usage:\t`rollerblade [options] input`");
-    console.log("or\t`rollerblade` configured with package.json or rbconfig.json");
+    console.log("or\t`rollerblade` configured with rollerblade.config.json");
     console.log("");
-    console.log("Must specify entry file or be configured in package.json or rbconfig.json.");
+    console.log("Must specify entry file or be configured in rollerblade.config.json.");
 
     if (long) {
         // Extended help
@@ -146,23 +141,21 @@ function printHelp(long: boolean) {
         console.log("\tSpecifies output file path.")
         console.log("\tIf not specified, writes adjacent to input file with .js extension.");
         console.log("");
-        console.log("--compress or -c");
-        console.log("\tEnable minification of output files.");
-        console.log("\tDisabled by default.");
-        console.log("");
-        console.log("--sourcemap or -m");
-        console.log("\tEnable writing sourcemaps, either \"inline\" or \"external\".");
-        console.log("\tExternal maps are written adjacent to output with .js.map extension.");
-        console.log("\tDisabled by default.");
-        console.log("");
         console.log("--format or -f");
         console.log("\tSets the desired module format ( amd, cjs, es, iife or umd ).");
-        console.log("\tWill use `iife` by default.");
+        console.log("\tWill use `cjs` by default.");
         console.log("");
         console.log("--target or -t");
         console.log("\tSets the desired js version target ( es3, es5, es2015... etc ).");
-        console.log("\tA tsconfig.json file will override this settings.");
         console.log("\tWill use `es5` by default.");
+        console.log("");
+        console.log("--minify or -m");
+        console.log("\tEnable minification of output files.");
+        console.log("\tDisabled by default.");
+        console.log("");
+        console.log("--sourcemap or -s");
+        console.log("\tEnable writing sourcemaps, either \"inline\" or \"external\".");
+        console.log("\tDisabled by default.");
         console.log("");
         console.log("--help or -h");
         console.log("\tDisplays this help text and ignores all other options.");
@@ -179,12 +172,13 @@ function printHelp(long: boolean) {
 }
 
 function loadConfigFile(file: string) {
-    const pkgPath = path.resolve(process.cwd(), file);
-    if (fs.existsSync(pkgPath)) {
-        return require(pkgPath);
-    } else {
-        return false;
-    }
+
+    // Find configuration file
+    const configPath = path.resolve(process.cwd(), file);
+
+    // If it exists, read file and parse
+    if (fs.existsSync(configPath)) return require(configPath);
+    else return false;
 }
 
 // Shamelessy ripped from rollup
