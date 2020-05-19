@@ -20,6 +20,7 @@ function config(src, out, banner = "") {
             typescript({
                 tsconfig: false,
                 importHelpers: true,
+                removeComments: true,
                 moduleResolution: 'node',
                 allowSyntheticDefaultImports: true,
                 downlevelIteration: true,

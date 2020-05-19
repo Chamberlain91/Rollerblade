@@ -61,8 +61,9 @@ export default async function rollerblade(configs: Config[] | Config) {
                 plugins: [
                     // Compile TS
                     typescript({
-                        importHelpers: true,
-                        moduleResolution: 'node',
+                        // importHelpers: true,
+                        removeComments: true,
+                        // moduleResolution: 'node',
                         tsconfig: config.tsconfig ?? false,
                         allowSyntheticDefaultImports: true,
                         experimentalDecorators: true,
@@ -70,7 +71,7 @@ export default async function rollerblade(configs: Config[] | Config) {
                         inlineSources: true,
                         sourceMap: true,
                         strict: true,
-                        target: "ES2016",
+                        target: "ES2018",
                         lib: [
                             "ES2015",
                             "ES2016",
@@ -84,7 +85,17 @@ export default async function rollerblade(configs: Config[] | Config) {
                     // Compile JS
                     resolve(),
                     commonjs(),
-                    terser(),
+                    terser({
+                        compress: {
+                            ecma: 2018,
+                            unsafe: true,
+                            unsafe_math: true,
+                            unsafe_arrows: true,
+                            unsafe_undefined: true,
+                            unsafe_proto: true,
+                            unsafe_methods: true,
+                        }
+                    }),
                     // Emit Source Maps
                     sourceMaps(),
                 ]
