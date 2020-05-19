@@ -35,6 +35,7 @@ var argv = parseArgs(process.argv.slice(2), {
         // Validate files exist
         if (!fs.existsSync(input)) { console.error(`Unable to find input file '${input}'.`); }
         if (tsconfig && !fs.existsSync(tsconfig)) { console.error(`Unable to find tsconfig '${tsconfig}'.`); }
+        ensurepath(output); // make sure output path exists
 
         // Transpile source
         for (let result of await rollerblade({ input, output, tsconfig })) {
@@ -43,3 +44,20 @@ var argv = parseArgs(process.argv.slice(2), {
     }
 
 })();
+
+// Shamelessy ripped from rollup
+function ensurepath(path: string) {
+    const dir = p.dirname(path);
+    try {
+        fs.readdirSync(dir);
+    } catch (err) {
+        ensurepath(dir);
+        try {
+            fs.mkdirSync(dir);
+        } catch (err2) {
+            if (err2.code !== 'EEXIST') {
+                throw err2;
+            }
+        }
+    }
+}
