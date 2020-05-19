@@ -1,28 +1,37 @@
-import typescript from 'rollup-typescript';
-import commonjs from 'rollup-plugin-commonjs';
-import uglify from 'rollup-plugin-uglify';
-import tsc from 'typescript';
+// 
+import typescript from '@rollup/plugin-typescript'
+// 
+import { terser } from 'rollup-plugin-terser'
+import commonjs from 'rollup-plugin-commonjs'
 
-import { join } from 'path';
+import { join } from 'path'
 
-function config(src, out, fmt, banner = "") {
+function config(src, out, banner = "") {
 
     return {
         input: join('./', src),
         output: {
-            file: join("./", out),
+            file: join('./', out),
             banner: banner,
-            format: fmt
+            format: 'cjs'
         },
         plugins: [
-            typescript({ typescript: tsc }),
+            // Compile TS
+            typescript({
+                tsconfig: false,
+                allowSyntheticDefaultImports: true,
+                downlevelIteration: true,
+                target: "ES5",
+                strict: true
+            }),
+            // Process JS
             commonjs(),
-            uglify()
+            terser()
         ]
-    };
+    }
 }
 
 export default [
-    config("src/index.ts", "index.js", "cjs"),
-    config("src/cli.ts", "bin/rollerblade", "cjs", "#!/usr/bin/env node")
-];
+    config("src/index.ts", "index.js"),
+    config("src/cli.ts", "bin/rollerblade", "#!/usr/bin/env node")
+]

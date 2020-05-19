@@ -1,8 +1,0 @@
-{
-    "input": "src/math.ts",
-    "output": "out/math.js",
-    "target": "es5",
-    "format": "cjs",
-    "sourcemap": "inline",
-    "minify": true
-}
