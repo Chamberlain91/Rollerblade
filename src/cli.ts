@@ -35,10 +35,10 @@ var argv = parseArgs(process.argv.slice(2), {
         // Validate files exist
         if (!fs.existsSync(input)) { console.error(`Unable to find input file '${input}'.`); }
         if (tsconfig && !fs.existsSync(tsconfig)) { console.error(`Unable to find tsconfig '${tsconfig}'.`); }
-        ensurepath(output); // make sure output path exists
 
         // Transpile source
         for (let result of await rollerblade({ input, output, tsconfig })) {
+            ensurepath(result.file); // make sure output path exists
             fs.writeFileSync(result.file, result.text);
         }
     }

@@ -8,13 +8,13 @@ A tool to shortcut compiling typescript to a single bundle.
 To install globally for use as CLI
 
 ```bash
-$ npm i -g rollerblade
+$ npm install -g rollerblade
 ```
 
 To install as a build dependancy
 
 ```bash
-npm i rollerblade -D
+npm install rollerblade tslib
 ```
 
 ## CLI Usage

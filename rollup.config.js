@@ -19,6 +19,8 @@ function config(src, out, banner = "") {
             // Compile TS
             typescript({
                 tsconfig: false,
+                importHelpers: true,
+                moduleResolution: 'node',
                 allowSyntheticDefaultImports: true,
                 downlevelIteration: true,
                 target: "ES5",
