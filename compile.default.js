@@ -9,6 +9,10 @@ export const defaultCompiler = new class extends Compiler {
 
     async _build(options) {
         await fs.copyFile(options.input, options.output)
+        return {
+            input: options.input,
+            output: options.output
+        }
     }
 
     canCompile() {

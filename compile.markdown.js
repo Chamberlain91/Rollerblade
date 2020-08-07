@@ -102,7 +102,11 @@ export const markdownCompiler = new class extends Compiler {
             await fs.writeFile(options.output, html)
         }
 
-        return attributes
+        return {
+            input: options.input,
+            output: options.output,
+            meta: attributes
+        }
     }
 
     _validateOptions(options) {

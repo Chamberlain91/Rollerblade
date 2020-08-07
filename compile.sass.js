@@ -1,7 +1,7 @@
 import { Compiler } from "./compile.base.js"
 import { promises as fs } from "fs"
 import { promisify } from "util"
-import { extname } from "path";
+import { extname } from "path"
 import sass from "node-sass"
 
 export const sassCompiler = new class extends Compiler {
@@ -34,6 +34,11 @@ export const sassCompiler = new class extends Compiler {
         // Write CSS source map to disk
         if (result.map) {
             await fs.writeFile(options.output + ".map", result.map.toString())
+        }
+
+        return {
+            input: options.input,
+            output: options.output
         }
     }
 }

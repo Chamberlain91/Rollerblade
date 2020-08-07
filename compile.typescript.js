@@ -1,5 +1,5 @@
 import { Compiler } from "./compile.base.js"
-import { extname } from "path";
+import { extname } from "path"
 import esbuild from "esbuild"
 
 export const typescriptCompiler = new class extends Compiler {
@@ -26,6 +26,11 @@ export const typescriptCompiler = new class extends Compiler {
             minify: true,
             bundle: true
         })
+
+        return {
+            input: options.input,
+            output: options.output
+        }
     }
 
     _validateOptions(options) {
