@@ -19,7 +19,7 @@ export default async function compile(options) {
     // Find an asset compiler suitable for this resource
     let compiler = compilers.find(c => c.canCompile(options.input))
     if (!compiler) { compiler = defaultCompiler }
-    await compiler.compile(options)
+    return await compiler.compile(options)
 }
 
 export {

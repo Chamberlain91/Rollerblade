@@ -90,7 +90,6 @@ export const markdownCompiler = new class extends Compiler {
             // Write front matter to disk
             if (options.emitMetadata && Object.keys(attributes).length > 0) {
                 const metaFile = changeExtension(options.output, 'json')
-                console.log('Compile: ' + chalk.cyan(`'${options.input}'`) + ' -> ' + chalk.cyan(`'${metaFile}'`))
                 await fs.writeFile(metaFile, JSON.stringify(attributes))
             }
 
@@ -102,6 +101,8 @@ export const markdownCompiler = new class extends Compiler {
             // Write generated html to disk
             await fs.writeFile(options.output, html)
         }
+
+        return attributes
     }
 
     _validateOptions(options) {

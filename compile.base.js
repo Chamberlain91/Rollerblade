@@ -46,7 +46,7 @@ export class Compiler {
         ensurepath(options.output)
 
         // Perform build operation
-        this._build(options)
+        return this._build(options)
     }
 
     _populateOptions(options) {
@@ -71,7 +71,7 @@ export class Compiler {
             // Rewrite output to point to output file
             options.output = options.output + path.basename(options.input)
         }
-        
+
         // Change extension to explicit extension
         if (this.extension) {
             options.output = changeExtension(options.output, this.extension)
