@@ -78,6 +78,12 @@ export const markdownCompiler = new class extends Compiler {
         const { attributes, body } = frontMatter(contents)
         const html = marked(body, { renderer: renderer })
 
+        // Write front matter to disk
+        if (options.emitMetadata && Object.keys(attributes).length > 0) {
+            const metaFile = changeExtension(options.output, 'json')
+            await fs.writeFile(metaFile, JSON.stringify(attributes))
+        }
+
         const canTemplate = options.template && options.templateEngine
         if (canTemplate) {
 
@@ -86,12 +92,6 @@ export const markdownCompiler = new class extends Compiler {
                 attr: attributes,
                 content: html
             })
-
-            // Write front matter to disk
-            if (options.emitMetadata && Object.keys(attributes).length > 0) {
-                const metaFile = changeExtension(options.output, 'json')
-                await fs.writeFile(metaFile, JSON.stringify(attributes))
-            }
 
             // Get async/await version of the consolidate template function
             const renderTemplate = promisify(consolidate[options.templateEngine])
