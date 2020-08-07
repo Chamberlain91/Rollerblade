@@ -35,6 +35,7 @@ export const markdownCompiler = new class extends Compiler {
 
     constructor() {
         super('html', {
+            emitMetadata: true,
             templateEngine: 'whiskers',
             data: {}
         })
@@ -87,7 +88,7 @@ export const markdownCompiler = new class extends Compiler {
             })
 
             // Write front matter to disk
-            if (Object.keys(attributes).length > 0) {
+            if (options.emitMetadata && Object.keys(attributes).length > 0) {
                 const metaFile = changeExtension(options.output, 'json')
                 console.log('Compile: ' + chalk.cyan(`'${options.input}'`) + ' -> ' + chalk.cyan(`'${metaFile}'`))
                 await fs.writeFile(metaFile, JSON.stringify(attributes))

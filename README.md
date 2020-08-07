@@ -57,7 +57,7 @@ To use rollerblade with Node, you must import the function using ES modules synt
 import rollerblade from 'rollerblade'
 ```
 
-This `rollerblade` function accepts a `config` object to descript how to process the asset. All assets require specfying `input` and `output`. The rules are the same as the command line.
+This `rollerblade` function accepts a `config` object to descript how to process the asset. All assets require specfying `input` and `output`. The rules are the same as the command line. Metadata from processing may be returned (see below).
 
 ```ts
 {
@@ -79,9 +79,12 @@ Path to a typescript config file. (optional)
  
 #### Markdown `[.md]`
 
-Markdown files are compiled from `.md` to `.html`. The conversion supports yaml front matter and templating via [consolidate][consolidate]. This data is exposed to the template via a local property named `attr`. 
+Markdown files are compiled from `.md` to `.html` with (optional) templating support via [consolidate][consolidate] (`whisker` by default).
 
-The front matter is also emitted to disk by placing it next to the output file with `.json` extension.
+Additionally, the markdown convertor supports extraction of yaml front matter. This metadata is emitted to disk by placing it next to the output file with a `.json` extension and is also returned by the `rollerblade` function. This data is exposed to the template via a local property named `attr`. 
+
+##### emitMetadata
+Set to `false` to avoid writing the yaml metadata to disk.
 
 ##### template
 Path to the template file. If omitted, the template pass is skipped.

@@ -31,6 +31,7 @@ if (argv._.length == 0 || argv._.length > 2) {
     if (argv.tsconfig) { options.tsconfig = argv.tsconfig }
 
     // Markdown options
+    options.emitMetadata = argv.emitMetadata
     if (argv.template) {
         options.template = argv.template
         options.templateEngine = argv.templateEngine
