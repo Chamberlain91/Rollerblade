@@ -102,34 +102,50 @@ For example, to compile both a typescript file and a stylesheet.
 ```js
 import rollerblade from "rollerblade"
 
-// Compile stylesheet
-rollerblade({
-    input: "src/style/index.scss",
-    output: "out/"
-})
+(async () => {
 
-// Compile typescript
-rollerblade({
-    input: "src/script/index.ts",
-    // tsconfig: ".tsconfig",
-    output: "out/"
-})
+    // Compile stylesheet
+    await rollerblade({
+        input: "src/style/index.scss",
+        output: "out/"
+    })
 
-// Compile markdown (via whiskers template)
-rollerblade({
-    input: "src/document.md",
-    output: "out/",
-    // Template (optional)
-    data: { title: "Rollerblade Template" },
-    templateEngine: "whiskers", // default is whiskers, so may be omitted
-    template: "src/template.html"
-})
+    // Compile typescript
+    await rollerblade({
+        input: "src/script/index.ts",
+        // tsconfig: ".tsconfig",
+        output: "out/"
+    })
 
-// Compile generic asset (ie, a simple copy)
-rollerblade({
-    input: "src/asset.txt",
-    output: "out/"
-})
+    // Compile markdown (via whiskers template)
+    const meta = await rollerblade({
+        input: "src/document.md",
+        output: "out/",
+        // Template (optional)
+        data: { title: "Rollerblade Template" },
+        templateEngine: "whiskers", // default is whiskers
+        template: "src/template.html",
+        emitMetadata: false // avoids writing out/document.json
+    })
+
+    // Compile generic asset (ie, a simple copy)
+    await rollerblade({
+        input: "src/asset.txt",
+        output: "out/"
+    })
+
+    // yaml front matter of src/document.md
+    console.log(meta)
+})()
+```
+
+`src/document.md`
+
+```html
+---
+name: An example
+---
+On this **fine day**, the machine exclaims *"Hello World!"*.
 ```
 
 `src/template.html`
@@ -141,7 +157,7 @@ rollerblade({
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title}</title>
+    <title>{title} - {name}</title>
 </head>
 
 <body>
