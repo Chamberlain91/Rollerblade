@@ -1,6 +1,6 @@
 {
   "name": "rollerblade",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A tool to heavily simplify compiling typescript and sass stylesheets into individual bundles.",
   "main": "index.js",
   "type": "module",
@@ -14,8 +14,13 @@
   "license": "MIT",
   "dependencies": {
     "chalk": "^4.1.0",
+    "consolidate": "^0.15.1",
     "esbuild": "^0.6.13",
+    "front-matter": "^4.0.2",
+    "highlight.js": "^10.1.2",
+    "marked": "^1.1.1",
     "minimist": "^1.2.5",
-    "node-sass": "^4.14.1"
+    "node-sass": "^4.14.1",
+    "whiskers": "^0.4.0"
   }
 }

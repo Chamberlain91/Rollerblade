@@ -1,85 +1,30 @@
-import { compileTypescript } from "./compile.typescript.js";
-import { compileSass } from "./compile.sass.js";
-import { changeExtension } from "./helper.js";
-import path from "path"
-import fs from "fs"
+import { defaultCompiler } from "./compile.default.js"
+import { typescriptCompiler } from "./compile.typescript.js"
+import { markdownCompiler } from "./compile.markdown.js"
+import { sassCompiler } from "./compile.sass.js"
+import { existsSync } from "fs"
 
-export function compile(params) {
+const compilers = [
+    typescriptCompiler,
+    markdownCompiler,
+    sassCompiler
+]
 
-    const input = params.input;
-    let output = params.output;
+export default async function compile(options) {
 
-    // Is a Typescript file
-    if (input.endsWith(".ts")) {
+    // Ensure input it set and a valid path on disk
+    if (!options.input) { throw new Error("Unable to compile. No input file specified.") }
+    if (!existsSync(options.input)) { throw new Error(`Unable to compile. Input file does not exist: '${options.input}'`) }
 
-        // No specified output, replace with default next to input file
-        if (!output) { output = changeExtension(input, 'js'); }
-
-        // Is the output a directory (ie, no extension)
-        if (path.extname(output) === '') {
-            if (!output.endsWith('/')) { output += '/'; }
-            output = output + changeExtension(path.basename(input), 'js');
-        }
-
-        // Extract parameters
-        const tsconfig = params.tsconfig;
-
-        // Validate files exist
-        if (!fs.existsSync(input)) { console.error(`Unable to find input file '${input}'.`); }
-        if (tsconfig && !fs.existsSync(tsconfig)) { console.error(`Unable to find tsconfig '${tsconfig}'.`); }
-
-        // Ensure path to output file exists
-        ensurepath(output);
-
-        // Compile Typescript
-        compileTypescript({
-            input: input,
-            output: output,
-            tsconfig: tsconfig
-        });
-    }
-    // Is a SCSS or SASS stylesheet
-    else if (input.endsWith(".scss") || input.endsWith(".sass")) {
-
-        // No specified output, replace with default next to input file
-        if (!output) { output = changeExtension(input, 'css'); }
-
-        // Is the output a directory (ie, no extension)
-        if (path.extname(output) === '') {
-            if (!output.endsWith('/')) { output += '/'; }
-            output = output + changeExtension(path.basename(input), 'css');
-        }
-
-        // Validate files exist
-        if (!fs.existsSync(input)) { console.error(`Unable to find input file '${input}'.`); }
-
-        // Ensure path to output file exists
-        ensurepath(output);
-
-        // Compile Sassy Stylesheet
-        compileSass({
-            input: input,
-            output: output
-        });
-    }
-
-    // Shamelessy ripped from rollup
-    function ensurepath(filepath) {
-        const dir = path.dirname(filepath);
-        try {
-            fs.readdirSync(dir);
-        } catch (err) {
-            ensurepath(dir);
-            try {
-                fs.mkdirSync(dir);
-            } catch (err2) {
-                if (err2.code !== 'EEXIST') {
-                    throw err2;
-                }
-            }
-        }
-    }
+    // Find an asset compiler suitable for this resource
+    let compiler = compilers.find(c => c.canCompile(options.input))
+    if (!compiler) { compiler = defaultCompiler }
+    await compiler.compile(options)
 }
 
-export default { compile, compileTypescript, compileSass }
-export { compileTypescript, compileSass };
+export {
+    compile,
+    typescriptCompiler,
+    markdownCompiler,
+    sassCompiler
+}
