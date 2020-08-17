@@ -1,19 +1,13 @@
 #!/usr/bin/env node
-import { compile } from "../index.js"
-import parseArgs from "minimist"
+const parseArgs = require("minimist")
+const compiler = require("../index.js").default
 
-var argv = parseArgs(process.argv.slice(2), {
-    alias: {
-        c: 'tsconfig',
-        t: 'template', e: 'templateEngine'
-    }
-})
+// Parse args
+const argv = parseArgs(process.argv.slice(2), {})
+const argCount = argv._.length != 1
 
-if (argv._.length == 0 || argv._.length > 2) {
-    console.log("usage: escompile <input> [output]")
-    console.log("[*.ts]")
-    console.log("--tsconfig or -c <path>")
-    console.log("    (optional) Specify a path to a tsconfig.json (optional)")
+if (argCount == 0 && argCount > 2) {
+    console.log("usage: rollerblade <input> [output]")
 } else {
 
     // Get input file
@@ -25,18 +19,12 @@ if (argv._.length == 0 || argv._.length > 2) {
         output = argv._[1]
     }
 
-    let options = { input, output }
-
-    // Typescript options
-    if (argv.tsconfig) { options.tsconfig = argv.tsconfig }
-
-    // Markdown options
-    options.emitMetadata = argv.emitMetadata
-    if (argv.template) {
-        options.template = argv.template
-        options.templateEngine = argv.templateEngine
-    }
-
-    // Perform compile/build
-    compile(options)
+    // Perform compile
+    compiler.compile(input).then(({ files, meta }) => {
+        for (let file of files) {
+            console.log(file.filename)
+            console.log(file.buffer.toString())
+        }
+        console.log(meta)
+    })
 } 

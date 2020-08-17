@@ -7,15 +7,16 @@ export const defaultCompiler = new class extends Compiler {
         super(undefined, {})
     }
 
-    async _build(options) {
-        await fs.copyFile(options.input, options.output)
-        return {
-            input: options.input,
-            output: options.output
-        }
+    canCompile() {
+        return false
     }
 
-    canCompile() {
-        return true
+    async _build(options) {
+        const buffer = await fs.readFile(options.input)
+        return {
+            output: { buffer, filename: options.output },
+            // no sourcemap,
+            // no meta
+        }
     }
 } 

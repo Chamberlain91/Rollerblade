@@ -8,8 +8,6 @@ import frontMatter from "front-matter"
 import marked from "marked"
 import hljs from "highlight.js"
 
-import chalk from "chalk"
-
 import { Compiler } from "./compile.base.js"
 import { extname } from "path"
 
