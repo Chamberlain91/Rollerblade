@@ -1,20 +1,21 @@
 {
   "name": "rollerblade",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "A tool to heavily simplify compiling typescript and sass stylesheets into individual bundles.",
   "main": "index.js",
+  "type": "module",
   "bin": {
     "rollerblade": "./bin/cli.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "esbuild ./src/index.ts --outfile=./index.js --platform=node --bundle --minify --external:esbuild --external:minimist --external:node-sass --external:chalk --external:marked --external:front-matter --external:highlight.js"
+    "build": "esbuild ./src/index.ts --outfile=./index.js --platform=node --bundle --format=esm --external:esbuild --external:minimist --external:node-sass --external:chalk --external:marked --external:front-matter --external:highlight.js"
   },
   "author": "Chris Chamberlain",
   "license": "MIT",
   "dependencies": {
     "chalk": "^4.1.0",
-    "esbuild": "^0.6.25",
+    "esbuild": "^0.6.27",
     "front-matter": "^4.0.2",
     "highlight.js": "^10.1.2",
     "marked": "^1.1.1",
@@ -24,7 +25,7 @@
   "devDependencies": {
     "@types/marked": "^1.1.0",
     "@types/minimist": "^1.2.0",
-    "@types/node": "^14.0.27",
+    "@types/node": "^14.6.0",
     "@types/node-sass": "^4.11.1"
   }
 }

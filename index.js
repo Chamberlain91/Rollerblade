@@ -1,1 +1,197 @@
-var m=Object.defineProperty,I=Object.prototype.hasOwnProperty,b=e=>m(e,"__esModule",{value:!0}),D=(e,t)=>{b(e);for(var r in t)m(e,r,{get:t[r],enumerable:!0})},G=(e,t)=>{if(b(e),typeof t=="object"||typeof t=="function")for(let r in t)!I.call(e,r)&&r!=="default"&&m(e,r,{get:()=>t[r],enumerable:!0});return e},o=e=>e&&e.__esModule?e:G(m({},"default",{value:e,enumerable:!0}),e);const w=o(require("fs")),S=o(require("path"));var v={async compile(e){const t=await w.promises.readFile(e),r=S.basename(e);return{files:[{buffer:t,filename:r}],meta:void 0}}};const d=o(require("path"));function s(e,t){let r=d.default.parse(e);return d.default.join(r.dir,r.name+"."+t)}const f=o(require("path")),h=o(require("fs")),C=o(require("os")),F=o(require("esbuild")),L=o(require("crypto"));let R;const q={useConfiguration(e){R=e},async compile(e){const t=s(f.basename(e),"js");let r=C.tmpdir(),i=L.default.randomBytes(16).toString("base64");var n=f.join(r,i);await F.default.build({entryPoints:[e],outfile:n,tsconfig:R,sourcemap:!0,minify:!0,bundle:!0});const c=await h.promises.readFile(n),u=await h.promises.readFile(n+".map");let A=[{filename:t,buffer:c},{filename:t+".map",buffer:u}];return{files:A,meta:void 0}}};var g=q;const E=o(require("fs")),O=o(require("path")),T=o(require("front-matter")),y=o(require("marked")),x=o(require("highlight.js"));let j=new y.default.Renderer({gfm:!0,highlight:function(e,t){const r=x.default.getLanguage(t)?t:"plaintext";return x.default.highlight(r,e).value}});const B={async compile(e){const t=s(O.basename(e),"html"),r=await E.promises.readFile(e),i=r.toString(),{attributes:n,body:c}=T.default(i),u=y.default(c,{renderer:j});return{files:[{filename:t,buffer:Buffer.from(u,"utf8")}],meta:n}},setLinkTransform(e){j.link=function(t,r,i){let n=r?`title='${r}'`:"";return t?`<a href='${e(t)}' ${n}>${i}</a>`:i}},defineCustomBlock(){throw new Error("Not implemented exception")}};B.setLinkTransform(e=>e);var k=B;const P=o(require("util")),U=o(require("path")),M=o(require("node-sass")),z=P.promisify(M.default.render),J={async compile(e){const t=s(U.basename(e),"css");let r=await z({file:e,outFile:t,sourceMapRoot:"./",outputStyle:"compressed",sourceMapContents:!0,sourceMap:!0}),i=[{filename:t,buffer:r.css}];return r.map&&i.push({filename:t+".map",buffer:r.map}),{files:i,meta:void 0}}};var l=J;D(exports,{default:()=>W});const a=o(require("fs")),p=o(require("path")),$=o(require("chalk"));let N={".scss":l.compile,".sass":l.compile,".ts":g.compile,".md":k.compile};var W={async compile(e){if(!a.existsSync(e))throw new Error(`Unable to compile asset. Input file does not exist: '${e}'`);const t=p.extname(e),r=N[t];return console.log("Processing: "+$.default.cyan(`'${e}'`)),r!==void 0?r(e):v.compile(e)},typescript:g,markdown:k,scss:l,makeDirectoryPath(e){const t=p.dirname(e);try{a.readdirSync(t)}catch(r){this.makeDirectoryPath(t);try{a.mkdirSync(t)}catch(i){if(i.code!=="EEXIST")throw i}}}};
+// src/helper.ts
+import path2 from "path";
+function changeExtension(src, ext) {
+  let fileInfo = path2.parse(src);
+  return path2.join(fileInfo.dir, fileInfo.name + "." + ext);
+}
+function isExternalURL(url) {
+  if (url.indexOf("//") === 0) {
+    return true;
+  }
+  if (url.indexOf("://") === -1) {
+    return false;
+  }
+  if (url.indexOf(".") === -1) {
+    return false;
+  }
+  if (url.indexOf("/") === -1) {
+    return false;
+  }
+  if (url.indexOf(":") > url.indexOf("/")) {
+    return false;
+  }
+  if (url.indexOf("://") < url.indexOf(".")) {
+    return true;
+  }
+  return false;
+}
+
+// src/compiler.copy.ts
+import {promises as fs2} from "fs";
+import {basename} from "path";
+var compiler_copy_default = {
+  async compile(input) {
+    const buffer = await fs2.readFile(input);
+    const filename = basename(input);
+    return {
+      files: [{buffer, filename}],
+      meta: void 0
+    };
+  }
+};
+
+// src/compiler.typescript.ts
+import {basename as basename2, join} from "path";
+import {promises as fs4} from "fs";
+import {tmpdir} from "os";
+import esbuild2 from "esbuild";
+import crypto2 from "crypto";
+let pathToConfig = void 0;
+const typescript = {
+  useConfiguration(file) {
+    pathToConfig = file;
+  },
+  async compile(input) {
+    const output = changeExtension(basename2(input), "js");
+    let dir = tmpdir();
+    let name = crypto2.randomBytes(16).toString("base64");
+    var tempfile = join(dir, name);
+    await esbuild2.build({
+      entryPoints: [input],
+      outfile: tempfile,
+      tsconfig: pathToConfig,
+      sourcemap: true,
+      minify: true,
+      bundle: true
+    });
+    const buffer = await fs4.readFile(tempfile);
+    const sourcemapBuffer = await fs4.readFile(tempfile + ".map");
+    let files = [
+      {filename: output, buffer},
+      {filename: output + ".map", buffer: sourcemapBuffer}
+    ];
+    return {files, meta: void 0};
+  }
+};
+var compiler_typescript_default = typescript;
+
+// src/compiler.markdown.ts
+import {promises as fs6} from "fs";
+import {basename as basename3} from "path";
+import frontMatter from "front-matter";
+import marked2 from "marked";
+import hljs from "highlight.js";
+let renderer = new marked2.Renderer({
+  gfm: true,
+  highlight: function(code, lang) {
+    const validLanguage = hljs.getLanguage(lang) ? lang : "plaintext";
+    return hljs.highlight(validLanguage, code).value;
+  }
+});
+const markdown = {
+  async compile(input) {
+    const output = changeExtension(basename3(input), "html");
+    const contentBuffer = await fs6.readFile(input);
+    const contents = contentBuffer.toString();
+    const {attributes, body} = frontMatter(contents);
+    const html = marked2(body, {renderer});
+    return {
+      files: [{filename: output, buffer: Buffer.from(html, "utf8")}],
+      meta: attributes
+    };
+  },
+  setLinkTransform(transformLink) {
+    renderer.link = function(href, title, text) {
+      let _title = title ? `title='${title}'` : "";
+      if (href) {
+        return `<a href='${transformLink(href)}' ${_title}>${text}</a>`;
+      } else {
+        return text;
+      }
+    };
+  },
+  defineCustomBlock() {
+    throw new Error("Not implemented exception");
+  }
+};
+markdown.setLinkTransform((h) => h);
+var compiler_markdown_default = markdown;
+
+// src/compiler.scss.ts
+import {promisify} from "util";
+import {basename as basename4} from "path";
+import sass from "node-sass";
+const render = promisify(sass.render);
+const scss = {
+  async compile(input) {
+    const output = changeExtension(basename4(input), "css");
+    let result = await render({
+      file: input,
+      outFile: output,
+      sourceMapRoot: "./",
+      outputStyle: "compressed",
+      sourceMapContents: true,
+      sourceMap: true
+    });
+    let files = [
+      {filename: output, buffer: result.css}
+    ];
+    if (result.map) {
+      files.push({filename: output + ".map", buffer: result.map});
+    }
+    return {files, meta: void 0};
+  }
+};
+var compiler_scss_default = scss;
+
+// src/index.ts
+import {existsSync, readdirSync, mkdirSync} from "fs";
+import {extname, dirname} from "path";
+import chalk2 from "chalk";
+let compilerFunctions = {
+  ".scss": compiler_scss_default.compile,
+  ".sass": compiler_scss_default.compile,
+  ".ts": compiler_typescript_default.compile,
+  ".md": compiler_markdown_default.compile
+};
+function makeDirectoryPath(file) {
+  const dir = dirname(file);
+  try {
+    readdirSync(dir);
+  } catch (err) {
+    this.makeDirectoryPath(dir);
+    try {
+      mkdirSync(dir);
+    } catch (err2) {
+      if (err2.code !== "EEXIST") {
+        throw err2;
+      }
+    }
+  }
+}
+var src_default = {
+  async compile(input) {
+    if (!existsSync(input)) {
+      throw new Error(`Unable to compile asset. Input file does not exist: '${input}'`);
+    }
+    const extension = extname(input);
+    const compileAsset = compilerFunctions[extension];
+    console.log("Processing: " + chalk2.cyan(`'${input}'`));
+    if (compileAsset !== void 0) {
+      return compileAsset(input);
+    } else {
+      return compiler_copy_default.compile(input);
+    }
+  },
+  helpers: {
+    makeDirectoryPath,
+    changeExtension,
+    isExternalURL
+  },
+  typescript: compiler_typescript_default,
+  markdown: compiler_markdown_default,
+  scss: compiler_scss_default
+};
+export {
+  src_default as default
+};

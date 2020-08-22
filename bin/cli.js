@@ -1,30 +1,37 @@
 #!/usr/bin/env node
-const parseArgs = require("minimist")
-const compiler = require("../index.js").default
+import compiler from "../index.js"
+import parseArgs from "minimist"
+import { writeFileSync } from "fs"
+import { join } from "path"
 
 // Parse args
 const argv = parseArgs(process.argv.slice(2), {})
 const argCount = argv._.length != 1
 
 if (argCount == 0 && argCount > 2) {
-    console.log("usage: rollerblade <input> [output]")
+    console.log("usage: rollerblade <input> [outputDir]")
 } else {
 
     // Get input file
     const input = argv._[0]
 
-    // Get output file
-    let output = undefined
+    // Get output directory
+    let outputDir = '.'
     if (argv._.length == 2) {
-        output = argv._[1]
+        outputDir = argv._[1]
     }
 
     // Perform compile
     compiler.compile(input).then(({ files, meta }) => {
+        // Write each generated file to disk
         for (let file of files) {
-            console.log(file.filename)
-            console.log(file.buffer.toString())
+            // Get output path and ensure the directory exists
+            let output = join(outputDir, file.filename)
+            compiler.helpers.makeDirectoryPath(output)
+            // Write generated file to disk
+            writeFileSync(output, file.buffer.toString())
         }
-        console.log(meta)
+        // ... what do with meta?
+        // console.log(meta)
     })
 } 

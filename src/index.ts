@@ -3,6 +3,7 @@ import { extname, dirname } from "path"
 import chalk from "chalk"
 
 // 
+import { changeExtension, isExternalURL } from "./helper"
 import defaultCompiler from "./compiler.copy"
 import typescript from "./compiler.typescript"
 import markdown from "./compiler.markdown"
@@ -29,6 +30,29 @@ let compilerFunctions: { [extension: string]: CompilerFunction } = {
     '.ts': typescript.compile,
     // Markdown
     '.md': markdown.compile
+}
+
+
+/**
+ * Ensures the directory structure leading to the specified file exists and 
+ * is created if it does not exist.
+ * @param file A path to some file
+ */
+function makeDirectoryPath(file: string) {
+    // note: shamelessly ripped from rollup
+    const dir = dirname(file)
+    try {
+        readdirSync(dir)
+    } catch (err) {
+        this.makeDirectoryPath(dir)
+        try {
+            mkdirSync(dir)
+        } catch (err2) {
+            if (err2.code !== 'EEXIST') {
+                throw err2
+            }
+        }
+    }
 }
 
 export default {
@@ -58,30 +82,15 @@ export default {
         }
     },
 
+    // Helper functions
+    helpers: {
+        makeDirectoryPath,
+        changeExtension,
+        isExternalURL,
+    },
+
     // Emit each asset compiler object directly.
     typescript,
     markdown,
     scss,
-
-    /**
-     * Ensures the directory structure leading to the specified file exists and 
-     * is created if it does not exist.
-     * @param file A path to some file
-     */
-    makeDirectoryPath(file: string) {
-        // note: shamelessly ripped from rollup
-        const dir = dirname(file)
-        try {
-            readdirSync(dir)
-        } catch (err) {
-            this.makeDirectoryPath(dir)
-            try {
-                mkdirSync(dir)
-            } catch (err2) {
-                if (err2.code !== 'EEXIST') {
-                    throw err2
-                }
-            }
-        }
-    }
 }

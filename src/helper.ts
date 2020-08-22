@@ -9,7 +9,7 @@ export function changeExtension(src: string, ext: string) {
  * Attempts to determine if URL provided is relative or absolute.
  * @param {string} url Some URL (relative or absolute)
  */
-export function isExternal(url: string) {
+export function isExternalURL(url: string) {
     // source: https://stackoverflow.com/questions/10687099/
     if (url.indexOf('//') === 0) { return true } // URL is protocol-relative (= absolute)
     if (url.indexOf('://') === -1) { return false } // URL has no protocol (= relative)
