@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublishOnly": "npx npm-dts generate && npm run build",
+    "prepublishOnly": "npm run build",
     "build": "tsc"
   },
   "author": "Chris Chamberlain",
