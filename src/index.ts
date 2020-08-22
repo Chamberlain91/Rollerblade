@@ -3,11 +3,11 @@ import { extname, dirname } from "path"
 import chalk from "chalk"
 
 // 
-import { changeExtension, isExternalURL } from "./helper"
-import defaultCompiler from "./compiler.copy"
-import typescript from "./compiler.typescript"
-import markdown from "./compiler.markdown"
-import scss from "./compiler.scss"
+import { changeExtension, isExternalURL } from "./helper.js"
+import defaultCompiler from "./compiler.copy.js"
+import typescript from "./compiler.typescript.js"
+import markdown from "./compiler.markdown.js"
+import scss from "./compiler.scss.js"
 
 export type OutputFile = {
     filename: string,

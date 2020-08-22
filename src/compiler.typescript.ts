@@ -1,6 +1,6 @@
-import { changeExtension } from "./helper"
+import { changeExtension } from "./helper.js"
 import { basename, join } from "path"
-import { OutputFile } from "./index"
+import { OutputFile } from "./index.js"
 import { promises as fs } from "fs"
 import { tmpdir } from "os"
 import esbuild from "esbuild"

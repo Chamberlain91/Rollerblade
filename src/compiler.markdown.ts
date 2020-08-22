@@ -1,4 +1,4 @@
-import { changeExtension } from "./helper"
+import { changeExtension } from "./helper.js"
 import { promises as fs } from "fs"
 import { basename } from "path"
 
@@ -15,7 +15,7 @@ let renderer = new marked.Renderer({
     }
 })
 
-export type LinkTransformFunction = (href: string) => string
+type LinkTransformFunction = (href: string) => string
 
 const markdown = {
 

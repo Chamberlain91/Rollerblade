@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import compiler from "../index.js"
+import compiler from "../out/index.js"
 import parseArgs from "minimist"
 import { writeFileSync } from "fs"
 import { join } from "path"

@@ -1,5 +1,5 @@
-import { OutputFile } from "./index"
-import { changeExtension } from "./helper"
+import { OutputFile } from "./index.js"
+import { changeExtension } from "./helper.js"
 import { promisify } from "util"
 import { basename } from "path"
 import sass from "node-sass"
