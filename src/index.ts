@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, mkdirSync } from "fs"
-import { extname, dirname, join } from "path"
+import { extname, dirname, join, basename } from "path"
 import chalk from "chalk"
 
 // 
@@ -53,6 +53,15 @@ function ensureDirectory(file: string, isDirectory: boolean = false) {
     }
 }
 
+/**
+ * Remaps a filename to a new directory with (optionally) a different extension.
+ */
+function getOutputFilename(input: string, outputDir: string, extension?: string) {
+    let output = join(outputDir, basename(input))
+    if (extension) { output = changeExtension(output, extension) }
+    return output
+}
+
 const rollerblade = {
 
     // 
@@ -84,6 +93,7 @@ const rollerblade = {
     helpers: {
         ensureDirectory,
         changeExtension,
+        getOutputFilename,
         isExternalURL,
     },
 
