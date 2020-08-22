@@ -2,7 +2,7 @@
   "name": "rollerblade",
   "version": "1.2.3",
   "description": "A tool to heavily simplify compiling typescript and sass stylesheets into individual bundles.",
-  "main": "index.js",
+  "main": "out/index.js",
   "type": "module",
   "bin": {
     "rollerblade": "./bin/cli.js"

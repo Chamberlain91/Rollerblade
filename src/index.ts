@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, mkdirSync } from "fs"
-import { extname, dirname } from "path"
+import { extname, dirname, join } from "path"
 import chalk from "chalk"
 
 // 
@@ -32,19 +32,17 @@ let compilerFunctions: { [extension: string]: CompilerFunction } = {
     '.md': markdown.compile
 }
 
-
 /**
- * Ensures the directory structure leading to the specified file exists and 
- * is created if it does not exist.
+ * Ensures the directory structure leading to the specified file exists and is created if it does not exist.
  * @param file A path to some file
  */
-function makeDirectoryPath(file: string) {
+function ensureDirectory(file: string, isDirectory: boolean = false) {
     // note: shamelessly ripped from rollup
-    const dir = dirname(file)
+    const dir = isDirectory ? file : dirname(file)
     try {
         readdirSync(dir)
     } catch (err) {
-        this.makeDirectoryPath(dir)
+        ensureDirectory(dir)
         try {
             mkdirSync(dir)
         } catch (err2) {
@@ -55,7 +53,7 @@ function makeDirectoryPath(file: string) {
     }
 }
 
-export default {
+const rollerblade = {
 
     // 
     async compile(input: string): Promise<CompilerResult> {
@@ -84,7 +82,7 @@ export default {
 
     // Helper functions
     helpers: {
-        makeDirectoryPath,
+        ensureDirectory,
         changeExtension,
         isExternalURL,
     },
@@ -94,3 +92,10 @@ export default {
     markdown,
     scss,
 }
+
+// Default export
+export default rollerblade
+
+// Named exports
+export const { compile, helpers } = rollerblade
+export { markdown, typescript, scss }
