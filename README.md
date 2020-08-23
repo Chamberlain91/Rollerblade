@@ -73,12 +73,15 @@ Files without a 'compiler' are simply read into memory.
 ### Example
 
 ```js
-import { compile, helpers as util } from "rollerblade"
-import { basename, join } from "path"
+import { compile } from "rollerblade"
+import { basename, extname, join } from "path"
 import { promises as fs } from "fs"
 
 const outputDir = "./out"
 
+/**
+ * @param {string} input 
+ */
 async function emitFile(input) {
 
     // Wait for result to complete
@@ -86,19 +89,19 @@ async function emitFile(input) {
 
     // Write files to disk (may include source maps)
     for (let { filename, buffer } of files) {
-        let outFile = util.getOutputFilename(filename, outputDir)
+        let outFile = join(outputDir, basename(filename))
         fs.writeFile(outFile, buffer.toString())
     }
 
     // Emit metadata
     if (meta) {
-        let metaFile = util.getOutputFilename(input, outputDir, 'json')
+        let metaFile = join(outputDir, basename(input, extname(input)) + ".json")
         fs.writeFile(metaFile, JSON.stringify(meta))
     }
 }
 
 // Create out directory
-util.ensureDirectory(outputDir, true)
+fs.mkdir(outputDir, { recursive: true })
 
 // Compile Sassy Stylesheet
 emitFile("src/style/index.scss")

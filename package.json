@@ -1,6 +1,6 @@
 {
   "name": "rollerblade",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "A tool to heavily simplify compiling typescript and sass stylesheets into individual bundles.",
   "main": "out/index.js",
   "type": "module",
