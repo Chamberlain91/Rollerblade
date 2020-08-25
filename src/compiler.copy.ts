@@ -1,16 +1,16 @@
+import { CompilerResult } from "./index.js"
 import { promises as fs } from "fs"
 import { basename } from "path"
 
 export default {
-    
-    async compile(input: string) {
 
-        const buffer = await fs.readFile(input)
-        const filename = basename(input)
+    async compile(input: string): Promise<CompilerResult> {
+
+        const contents = await fs.readFile(input)
+        const name = basename(input)
 
         return {
-            files: [{ buffer, filename }],
-            meta: undefined
+            file: { contents, name }
         }
     }
 }

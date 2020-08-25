@@ -1,9 +1,14 @@
 # Rollerblade
 
-## Overview
-A command line tool and npm module to shortcut compiling typescript, markdown and scss into individual bundles.
+A command line tool and npm package to shortcut compiling typescript and scss bundles as well as compile markdown into minified HTML. 
 
-## Installation
+## Overview
+
+Note: *This is not and likely will never be as customizable as a build tool like webpack or rollup, but should be simpler (and possibly faster) to use for projects that do not require such a pipeline.*
+
+This utility was written and tested against `Node 14.8.X`.
+
+### Installation
 
 To install globally for use as CLI
 
@@ -11,30 +16,32 @@ To install globally for use as CLI
 $ npm install -g rollerblade
 ```
 
-To install as a build dependancy
+To install as a package
 
 ```bash
 npm install rollerblade
 ```
 
-## CLI Usage
+### CLI Usage
 
 ```bash
 rollerblade <input> [outputDir]
 ```
 
-Note: Source maps are automatically placed next to the output file with `.map` appended to the output file name.
+If the `outputDir` argument is not given, it will write into the current directory.
 
 Multiple invocations are needed in order to compile multiple bundles.
 
-### Example
+Note: *Source maps are automatically placed next to the output file with `.map` appended to the output file name.*
+
+#### Example
 
 ```sh
 rollerblade ./src/index.scss ./out
 rollerblade ./src/index.ts ./out
 ```
 
-## Javascript API
+### Javascript API
 
 To use rollerblade with Node, you must import the function using ES modules syntax.
 
@@ -43,77 +50,84 @@ or
 import { compile } from 'rollerblade'
 ```
 
-This async `compile` function accepts a single string argument as the path to a file. The function returns a results object  defined below:
+This async `compile` function accepts a single string argument as the path to a file. The function returns a results object as defined below:
 
 ```ts
 {
-    files: Array<{filename: string, buffer: Buffer}>,
-    meta: any
+    file: { name: string, contents: Buffer | string },
+    sourcemap?: { name: string, contents: Buffer | string },
+    meta?: any
 }
 ```
 
-### Supported 'Compilers'
+#### Supported 'Compilers'
 
-#### Sassy Stylesheets `[.scss, .sass]`
+##### Sassy Stylesheets `[.scss, .sass]`
 
 Generates a bundled `.css` via [Node Sass][nodesass].
 
-#### Typescript `[.ts]`
+##### Typescript `[.ts]`
 
 Generates a bundled `.js` via [esbuild][esbuild].
  
-#### Markdown `[.md]`
+##### Markdown `[.md]`
 
-Generates a `.html` file and extracts yaml metadata via [marked][marked] and [front-matter][frontmatter].
+Generates a minified `.html` file and extracts yaml metadata via [marked][marked] and [front-matter][frontmatter].
 
-#### Anything Else [.*]
+##### Anything Else [.*]
 
 Files without a 'compiler' are simply read into memory.
 
-### Example
+#### Example
 
 ```js
-import { compile } from "rollerblade"
-import { basename, extname, join } from "path"
+import { basename, extname, join, dirname, relative } from "path"
+import { compile, writeFile } from "rollerblade"
 import { promises as fs } from "fs"
 
+const sourceDir = "./src"
 const outputDir = "./out"
 
-/**
- * @param {string} input 
- */
-async function emitFile(input) {
+async function compileFile(input) {
+
+    // Construct source path
+    input = join(sourceDir, input)
 
     // Wait for result to complete
-    let { files, meta } = await compile(input)
+    let { file, sourcemap, meta } = await compile(input)
 
-    // Write files to disk (may include source maps)
-    for (let { filename, buffer } of files) {
-        let outFile = join(outputDir, basename(filename))
-        fs.writeFile(outFile, buffer.toString())
+    // Ensure same structured output directory exists
+    let dir = join(outputDir, relative(sourceDir, dirname(input)))
+    await fs.mkdir(dir, { recursive: true })
+
+    // Write file to disk
+    writeFile(dir, file)
+
+    // Write sourcemap (if exists)
+    if (sourcemap) {
+        writeFile(dir, sourcemap)
     }
 
-    // Emit metadata
+    // Write metadata as json (if exists)
     if (meta) {
-        let metaFile = join(outputDir, basename(input, extname(input)) + ".json")
-        fs.writeFile(metaFile, JSON.stringify(meta))
+        writeFile(dir, {
+            name: basename(input, extname(input)) + ".json",
+            contents: JSON.stringify(meta)
+        })
     }
 }
 
-// Create out directory
-fs.mkdir(outputDir, { recursive: true })
-
 // Compile Sassy Stylesheet
-emitFile("src/style/index.scss")
+compileFile("style/index.scss")
 
 // Compile Typescript
-emitFile("src/script/index.ts")
+compileFile("script/index.ts")
 
 // Compile Markdown
-emitFile("src/document.md")
+compileFile("document.md")
 
 // Compile Generic (ie, Copy file)
-emitFile("src/asset.txt")
+compileFile("asset.txt")
 ```
 
 [frontmatter]: https://www.npmjs.com/package/front-matter

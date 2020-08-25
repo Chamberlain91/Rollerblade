@@ -1,37 +1,48 @@
 #!/usr/bin/env node
-import compiler from "../out/index.js"
+import { basename, extname } from "path"
 import parseArgs from "minimist"
-import { writeFileSync } from "fs"
-import { join } from "path"
+import chalk from "chalk"
+
+import compiler from "../out/index.js"
 
 // Parse args
 const argv = parseArgs(process.argv.slice(2), {})
-const argCount = argv._.length != 1
+const args = argv._
 
-if (argCount == 0 && argCount > 2) {
-    console.log("usage: rollerblade <input> [outputDir]")
+if (args.length == 0 || args.length > 2) {
+    // Emit usage help
+    console.log(chalk.cyan("usage: ") + "rollerblade <input> [outputDir]")
 } else {
 
     // Get input file
-    const input = argv._[0]
+    const input = args[0]
 
     // Get output directory
     let outputDir = '.'
-    if (argv._.length == 2) {
-        outputDir = argv._[1]
+    if (args.length == 2) {
+        outputDir = args[1]
     }
 
+    // Log progress
+    console.log('Processing: ' + chalk.cyan(`'${input}'`))
+
     // Perform compile
-    compiler.compile(input).then(({ files, meta }) => {
-        // Write each generated file to disk
-        for (let file of files) {
-            // Get output path and ensure the directory exists
-            let output = join(outputDir, file.filename)
-            compiler.helpers.makeDirectoryPath(output)
-            // Write generated file to disk
-            writeFileSync(output, file.buffer.toString())
+    compiler.compile(input).then(async ({ file, sourcemap, meta }) => {
+
+        // Write transpiled file to disk
+        await compiler.writeFile(outputDir, file)
+
+        // Write sourcemap to disk (if exists)
+        if (sourcemap) {
+            await compiler.writeFile(outputDir, sourcemap)
         }
-        // ... what do with meta?
-        // console.log(meta)
+
+        // Write metadata (ex, yaml frontmatter) to disk (if exists)
+        if (meta) {
+            await compiler.writeFile(outputDir, {
+                name: basename(file.name, extname(file.name)) + ".json",
+                contents: Buffer.from(JSON.stringify(meta), 'utf8')
+            })
+        }
     })
-} 
+}

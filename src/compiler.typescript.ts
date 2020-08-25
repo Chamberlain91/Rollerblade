@@ -1,49 +1,51 @@
 import { changeExtension } from "./helper.js"
+import { CompilerResult } from "./index.js"
 import { basename, join } from "path"
-import { OutputFile } from "./index.js"
 import { promises as fs } from "fs"
 import { tmpdir } from "os"
 import esbuild from "esbuild"
 import crypto from "crypto"
 
-let pathToConfig: string | undefined = undefined
+function getTemporary(name) {
+    // const name = crypto.randomBytes(16).toString('base64')
+    return join(tmpdir(), name)
+}
 
 const typescript = {
 
-    useConfiguration(file: string) {
-        pathToConfig = file
-    },
+    async compile(input: string): Promise<CompilerResult> {
 
-    async compile(input: string) {
-
-        const output = changeExtension(basename(input), 'js')
+        // 
+        const fileName = changeExtension(basename(input), 'js')
+        const mapName = fileName + ".map"
 
         // Get a random temporary file to write esbuild results into
-        let dir = tmpdir()
-        let name = crypto.randomBytes(16).toString('base64')
-        var tempfile = join(dir, name)
+        const tempFile = getTemporary(fileName)
+        const tempMapFile = tempFile + ".map"
 
-        // Compile JS bundle
+        // Compile JS bundle to temporary file
         await esbuild.build({
             entryPoints: [input],
-            outfile: tempfile,
-            tsconfig: pathToConfig,
+            outfile: tempFile,
             sourcemap: true,
             minify: true,
             bundle: true
         })
 
-        // 
-        const buffer = await fs.readFile(tempfile)
-        const sourcemapBuffer = await fs.readFile(tempfile + ".map")
+        // Load temporary files back into memory
+        const fileBuffer = await fs.readFile(tempFile)
+        const mapBuffer = await fs.readFile(tempMapFile)
 
-        // The compiled javascript and sourcemap file
-        let files: OutputFile[] = [
-            { filename: output, buffer },
-            { filename: output + ".map", buffer: sourcemapBuffer }
-        ]
+        // Delete temporary files
+        await fs.unlink(tempFile)
+        await fs.unlink(tempMapFile)
 
-        return { files, meta: undefined }
+        return {
+            // The transpiled (TS -> JS) file
+            file: { name: fileName, contents: fileBuffer },
+            // The sourcemap of the transpiled file
+            sourcemap: { name: mapName, contents: mapBuffer }
+        }
     }
 }
 

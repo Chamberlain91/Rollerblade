@@ -1,4 +1,5 @@
 import { changeExtension } from "./helper.js"
+import { CompilerResult } from "./index.js"
 import { promises as fs } from "fs"
 import { basename } from "path"
 
@@ -19,8 +20,7 @@ type LinkTransformFunction = (href: string) => string
 
 const markdown = {
 
-    async compile(input: string) {
-        const output = changeExtension(basename(input), 'html')
+    async compile(input: string): Promise<CompilerResult> {
 
         // Read file 
         const contentBuffer = await fs.readFile(input)
@@ -31,8 +31,11 @@ const markdown = {
         const html = marked(body, { renderer: renderer })
 
         return {
-            files: [{ filename: output, buffer: Buffer.from(html, 'utf8') }],
-            meta: attributes
+            meta: attributes,
+            file: {
+                name: changeExtension(basename(input), 'html'),
+                contents: Buffer.from(html, 'utf8')
+            }
         }
     },
 
