@@ -74,7 +74,6 @@ export async function writeFile(file: OutputFile, outDir: string) {
 
     // Write file to disk
     const outFile = join(outDir, basename(file.name))
-    console.log(outFile)
     await fs.writeFile(outFile, file.contents)
 }
 

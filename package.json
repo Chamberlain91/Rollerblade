@@ -1,6 +1,6 @@
 {
   "name": "rollerblade",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "A command line tool and npm package to shortcut compiling typescript and scss bundles as well as compile markdown into minified HTML.",
   "main": "out/index.js",
   "type": "module",
