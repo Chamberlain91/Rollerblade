@@ -7,6 +7,7 @@ import frontMatter from "front-matter"
 import marked from "marked"
 import hljs from "highlight.js"
 import katex from "katex"
+import { off } from 'process'
 
 marked.setOptions({
 
@@ -75,6 +76,8 @@ const extensionRenderer: any = {
 
     paragraph(text: string) {
 
+        let offset = 0
+
         // Match all katex blocks
         const regex = /(\${1,2})([^\$]*)\1/g
         for (let match of [...text.matchAll(regex)]) {
@@ -87,10 +90,18 @@ const extensionRenderer: any = {
                 displayMode
             })
 
-            return content
+            // Compute start and end indices of match
+            const start = offset + match.index
+            const end = start + match[0].length
+
+            // Replace LaTeX w/ rendered string
+            text = text.slice(0, start) + content + text.slice(end)
+
+            // Accumulate offset to compensate for different string length
+            offset += content.length - match[0].length
         }
 
-        return false
+        return `<p>${text}</p>\n`
     },
 
     link(href: string, title: string, text: string) {
