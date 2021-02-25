@@ -1,7 +1,8 @@
-import { changeExtension } from "./helper.js"
-import { CompilerResult } from "./index.js"
+import { CompilerResult, OutputFile, changeExtension } from "./index.js"
+
 import { promisify } from "util"
 import { basename } from "path"
+
 import sass from "node-sass"
 
 // Convert node-sass render function to promise/await
@@ -23,20 +24,19 @@ const scss = {
             sourceMap: true
         })
 
-        return {
-
-            // The transpiled file
-            file: {
-                name: fileName,
-                contents: result.css
-            },
-
-            // The sourcemap of the transpiled file
-            sourcemap: {
-                name: fileName + ".map",
-                contents: result.map
-            }
+        // The transpiled file
+        const file: OutputFile = {
+            name: fileName,
+            contents: result.css
         }
+
+        // The sourcemap of the transpiled file
+        const sourcemap: OutputFile = {
+            name: fileName + ".map",
+            contents: result.map
+        }
+
+        return { file, sourcemap }
     }
 }
 

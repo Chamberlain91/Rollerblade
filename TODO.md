@@ -6,6 +6,7 @@
   - [X] Emit Sourcemap
 - [X] Transpile MD -> HTML
   - [ ] Configurable Custom Blocks
+    - [X] Support For KaTeX
   - [X] Emit HTML (Minified)
 - [X] Fallback Copy
   - [X] HTML Minified

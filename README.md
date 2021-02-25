@@ -1,6 +1,6 @@
 # Rollerblade
 
-A command line tool and npm package to shortcut compiling typescript and scss bundles as well as compile markdown into minified HTML. 
+A command line tool and npm package to shortcut compiling typescript and scss bundles as well as compile markdown into minified HTML with front-matter. 
 
 ## Overview
 
@@ -45,7 +45,6 @@ rollerblade ./src/index.ts ./out
 
 To use rollerblade with Node, you must import the function using ES modules syntax.
 
-or
 ```js
 import { compile } from 'rollerblade'
 ```
@@ -74,16 +73,28 @@ Generates a bundled `.js` via [esbuild][esbuild].
 
 Generates a minified `.html` file and extracts yaml metadata via [marked][marked] and [front-matter][frontmatter].
 
+This compiler step is extended to support code highlighting and rendering LaTeX.
+
+###### LaTeX Support
+In order to render LaTex, this compilation step uses [KaTeX](https://github.com/KaTeX/KaTeX) within `$` and `$$` blocks.  
+*You will need to include their stylesheet for proper styling.*
+
+###### Code Highlighting Support
+The markdown parser supports code highlighting via [highlight.js](https://github.com/highlightjs/highlight.js).  
+*You will need to include one of their stylesheets for proper styling.*
+
 ##### Anything Else [.*]
 
-Files without a 'compiler' are simply read into memory.
+Files without a 'compiler' are simply read into memory to allow byte-for-byte copies.
 
 #### Example
 
 ```js
 import { basename, extname, join, dirname, relative } from "path"
-import { compile, writeFile } from "rollerblade"
+import { compile, utilities } from "rollerblade"
 import { promises as fs } from "fs"
+
+const { writeFile } = utilities
 
 const sourceDir = "./src"
 const outputDir = "./out"
@@ -101,19 +112,19 @@ async function compileFile(input) {
     await fs.mkdir(dir, { recursive: true })
 
     // Write file to disk
-    writeFile(dir, file)
+    writeFile(file, dir)
 
     // Write sourcemap (if exists)
     if (sourcemap) {
-        writeFile(dir, sourcemap)
+        writeFile(sourcemap, dir)
     }
 
     // Write metadata as json (if exists)
     if (meta) {
-        writeFile(dir, {
+        writeFile({
             name: basename(input, extname(input)) + ".json",
             contents: JSON.stringify(meta)
-        })
+        }, dir)
     }
 }
 

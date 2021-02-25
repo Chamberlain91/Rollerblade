@@ -1,13 +1,12 @@
-import { changeExtension } from "./helper.js"
-import { CompilerResult } from "./index.js"
+import { CompilerResult, OutputFile, changeExtension } from "./index.js"
+
 import { basename, join } from "path"
 import { promises as fs } from "fs"
 import { tmpdir } from "os"
-import esbuild from "esbuild"
-import crypto from "crypto"
 
-function getTemporary(name) {
-    // const name = crypto.randomBytes(16).toString('base64')
+import esbuild from "esbuild"
+
+function getTemporary(name: string) {
     return join(tmpdir(), name)
 }
 
@@ -40,12 +39,18 @@ const typescript = {
         await fs.unlink(tempFile)
         await fs.unlink(tempMapFile)
 
-        return {
-            // The transpiled (TS -> JS) file
-            file: { name: fileName, contents: fileBuffer },
-            // The sourcemap of the transpiled file
-            sourcemap: { name: mapName, contents: mapBuffer }
+        // The transpiled (TS -> JS) file
+        const file: OutputFile = {
+            name: fileName,
+            contents: fileBuffer
         }
+
+        // The sourcemap of the transpiled file
+        const sourcemap: OutputFile = {
+            name: mapName, contents: mapBuffer
+        }
+
+        return { file, sourcemap }
     }
 }
 

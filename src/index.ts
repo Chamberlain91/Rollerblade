@@ -1,5 +1,5 @@
-import { existsSync, promises as fs } from "fs"
-import { extname, join, basename } from "path"
+import { join, basename, extname, parse } from "path"
+import { existsSync as exists, promises as fs } from "fs"
 
 import defaultCompiler from "./compiler.copy.js"
 import typescript from "./compiler.typescript.js"
@@ -33,7 +33,7 @@ let compilerFunctions = {
 async function compile(input: string): Promise<CompilerResult> {
 
     // Ensure input file exists on disk
-    if (!existsSync(input)) {
+    if (!exists(input)) {
         throw new Error(`Unable to compile asset. Input file does not exist: '${input}'`)
     }
 
@@ -52,19 +52,37 @@ async function compile(input: string): Promise<CompilerResult> {
 }
 
 /**
- * 
- * @param outDir The output directory
- * @param file The file to write to disk 
+ * Changes the extension of a file path.
+ * @param src The original path
+ * @param ext The new extension
  */
-async function writeFile(outDir: string, file: OutputFile) {
+export function changeExtension(src: string, ext: string) {
+    const fileInfo = parse(src)
+    if (ext != "" && !ext.startsWith(".")) { ext = `.${ext}` }
+    return join(fileInfo.dir, fileInfo.name + ext)
+}
+
+/**
+ * Writes an {@link OutputFile} to the specifeid directory.
+ * @param file The file to write to disk 
+ * @param outDir The output directory
+ */
+export async function writeFile(file: OutputFile, outDir: string) {
+
     // Ensure output directory exists
     await fs.mkdir(outDir, { recursive: true })
+
     // Write file to disk
     const outFile = join(outDir, basename(file.name))
     console.log(outFile)
     await fs.writeFile(outFile, file.contents)
 }
 
+const utilities = {
+    changeExtension,
+    writeFile
+}
+
 // Export
-export default { compile, writeFile, typescript, markdown, scss }
-export { compile, writeFile, markdown, typescript, scss }
+export default { compile, typescript, markdown, scss, utilities }
+export { compile, markdown, typescript, scss, utilities }
