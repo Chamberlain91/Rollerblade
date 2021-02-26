@@ -1,6 +1,6 @@
 {
   "name": "rollerblade",
-  "version": "1.4.3",
+  "version": "1.4.5",
   "description": "A command line tool and npm package to shortcut compiling typescript and scss bundles as well as compile markdown into minified HTML.",
   "main": "out/index.js",
   "type": "module",
@@ -15,7 +15,6 @@
   "author": "Chris Chamberlain",
   "license": "MIT",
   "dependencies": {
-    "chalk": "^4.1.0",
     "esbuild": "^0.6.34",
     "front-matter": "^4.0.2",
     "highlight.js": "^10.6.0",

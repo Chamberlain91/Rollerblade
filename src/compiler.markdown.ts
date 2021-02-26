@@ -7,7 +7,6 @@ import frontMatter from "front-matter"
 import marked from "marked"
 import hljs from "highlight.js"
 import katex from "katex"
-import { off } from 'process'
 
 marked.setOptions({
 
@@ -22,9 +21,13 @@ marked.setOptions({
 })
 
 type LinkTransformFunction = (href: string) => string
+type CodeTransform = (code: string, lang: string, escaped: boolean) => string | false
+type ImageTransform = (href: string, title: string, text: string) => string | false
 
 // By default, we do not modify links
-let linkTransformFn: LinkTransformFunction = x => x
+let linkTransform: LinkTransformFunction = x => x
+let imageTransforms: ImageTransform[] = []
+let codeTransforms: [string, CodeTransform][] = []
 
 const markdown = {
 
@@ -50,16 +53,20 @@ const markdown = {
      * Sets a function to override the generated URI's for links.
      * @param transformLink A function to transform the uri of generated links
      */
-    setLinkTransform(transformLink: LinkTransformFunction) {
-        linkTransformFn = transformLink
+    setLinkTransform(transform: LinkTransformFunction) {
+        linkTransform = transform
     },
 
-    defineCustomBlock(/* todo */) {
-        throw new Error("Not implemented exception")
+    addImageTransform(transform: ImageTransform) {
+        imageTransforms.push(transform)
+    },
+
+    addCodeTransform(lang: string, transform: CodeTransform) {
+        codeTransforms.push([lang, transform])
     }
 }
 
-function isExternal(url) {
+function isExternal(url: string) {
     // source: https://stackoverflow.com/questions/10687099/
     if (url.indexOf('//') === 0) { return true } // URL is protocol-relative (= absolute)
     if (url.indexOf('://') === -1) { return false } // URL has no protocol (= relative)
@@ -70,20 +77,13 @@ function isExternal(url) {
     return false // Anything else must be relative
 }
 
-markdown.setLinkTransform(x => x)
+function isMatchingLanguage(a: string, b: string) {
+    return a == b
+}
 
 // We are using 'any' here to silence the warnings about 
 // missing symbols for other Renderer properties...
 const extensionRenderer: any = {
-
-    code(code: string, lang: string, escaped: boolean) {
-
-        if (lang == "diagram") {
-            return "<canvas width='800' height='600'></canvas>"
-        }
-
-        return false
-    },
 
     paragraph(text: string) {
 
@@ -115,17 +115,48 @@ const extensionRenderer: any = {
         return `<p>${text}</p>\n`
     },
 
+    code(code: string, lang: string, escaped: boolean) {
+
+        // Attempt user transformation of markdown code element
+        for (let [trasnformLang, transform] of codeTransforms) {
+
+            if (isMatchingLanguage(trasnformLang, lang)) {
+
+                // Attempt transform
+                let result = transform(code, lang, escaped)
+
+                // If result is false, move to next match
+                if (result === false) continue
+                else return result
+            }
+        }
+
+        return false
+    },
+
     image(href: string, title: string, text: string) {
+
+        // Attempt user transformation of markdown image element
+        for (let transform of imageTransforms) {
+
+            // Attempt transform
+            let result = transform(href, title, text)
+
+            // If result is false, move to next option
+            if (result === false) continue
+            else return result
+        }
+
+        // Determine if link is external
+        let external = isExternal(href)
 
         // Construct attributes (if not falsy)
         let _title = title ? `title='${title}'` : ''
         let _alt = text ? `text='${text}'` : ''
 
-        // Determine if link is external
-        let external = isExternal(href)
+        // Only transform local links
         if (!external) {
-            const transform = linkTransformFn ?? (x => x)
-            href = transform(href)
+            href = linkTransform(href)
         }
 
         return `<img src="${href}" ${_title} ${_alt}/>`
@@ -142,15 +173,15 @@ const extensionRenderer: any = {
             let _title = title ? `title='${title}'` : ''
             let _target = external ? `target='blank'` : ''
 
+            // Only transform local links
             if (!external) {
-                const transform = linkTransformFn ?? (x => x)
-                href = transform(href)
+                href = linkTransform(href)
             }
 
             return `<a href='${href}' ${_title} ${_target}>${text}</a>`
         }
 
-        // Use defaults...?
+        // Use whatever default marked will do
         return false
     }
 }
