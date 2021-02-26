@@ -59,6 +59,17 @@ const markdown = {
     }
 }
 
+function isExternal(url) {
+    // source: https://stackoverflow.com/questions/10687099/
+    if (url.indexOf('//') === 0) { return true } // URL is protocol-relative (= absolute)
+    if (url.indexOf('://') === -1) { return false } // URL has no protocol (= relative)
+    if (url.indexOf('.') === -1) { return false } // URL does not contain a dot, i.e. no TLD (= relative, possibly REST)
+    if (url.indexOf('/') === -1) { return false } // URL does not contain a single slash (= relative)
+    if (url.indexOf(':') > url.indexOf('/')) { return false } // The first colon comes after the first slash (= relative)
+    if (url.indexOf('://') < url.indexOf('.')) { return true } // Protocol is defined before first dot (= absolute)
+    return false // Anything else must be relative
+}
+
 markdown.setLinkTransform(x => x)
 
 // We are using 'any' here to silence the warnings about 
@@ -104,15 +115,39 @@ const extensionRenderer: any = {
         return `<p>${text}</p>\n`
     },
 
+    image(href: string, title: string, text: string) {
+
+        // Construct attributes (if not falsy)
+        let _title = title ? `title='${title}'` : ''
+        let _alt = text ? `text='${text}'` : ''
+
+        // Determine if link is external
+        let external = isExternal(href)
+        if (!external) {
+            const transform = linkTransformFn ?? (x => x)
+            href = transform(href)
+        }
+
+        return `<img src="${href}" ${_title} ${_alt}/>`
+    },
+
     link(href: string, title: string, text: string) {
 
-        // Construct title attribute (if not falsy)
-        let _title = title ? `title='${title}'` : ''
-
         if (href) {
-            const transform = linkTransformFn ?? (x => x)
-            // In internal (on-site) link
-            return `<a href='${transform(href)}' ${_title}>${text}</a>`
+
+            // Determine if link is external
+            let external = isExternal(href)
+
+            // Construct attributes (if not falsy)
+            let _title = title ? `title='${title}'` : ''
+            let _target = external ? `target='blank'` : ''
+
+            if (!external) {
+                const transform = linkTransformFn ?? (x => x)
+                href = transform(href)
+            }
+
+            return `<a href='${href}' ${_title} ${_target}>${text}</a>`
         }
 
         // Use defaults...?
